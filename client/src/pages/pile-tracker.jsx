@@ -10,6 +10,7 @@ import PileModal from "../components/Pile-Tracker/PileModal";
 import { ItpReport } from "../components/Pile-Tracker/ItpReport";
 import ImportModal from "../components/Pile-Tracker/ImportModal";
 import ProjectModal from "../components/Pile-Tracker/ProjectModal";
+import RegisterEntryModal from "../components/Pile-Tracker/RegisterEntryModal";
 
 /* schedule seeded from "Pile Schedule Rev 26 — 19 May 26" (1300 piles)
    columns: [no, dia, grade, verticalReo, ligs, socket, cutoffRL, topSteelRL, cancelled?] */
@@ -182,30 +183,7 @@ function hpPip(p, which) {
 /* ───────────────────────── pile modal ───────────────────────── */
 
 
-function RegisterEntryModal({ entry, projects, defaultProject, onSave, onDelete, onClose }) {
-  const [f, setF] = useState(() => ({ pileRef: "", dia: "", grade: "", verticalReo: "", verticalReoLower: "", ligs: "", socket: "", cutoffRL: "", topSteelRL: "", gridRef: "", projectId: defaultProject || projects[0]?.id || "", ...entry }));
-  const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
-  const isNew = !entry?.id;
-  return (
-    <div className="pt-overlay" onMouseDown={onClose}><div className="pt-modal" onMouseDown={(e) => e.stopPropagation()}>
-      <div className="pt-modal-head"><div><div className="pt-eyebrow">{isNew ? "Register entry" : "Edit entry"}</div><div className="pt-modal-title">Pile {f.pileRef || "—"}</div></div><button className="pt-iconbtn" onClick={onClose}><X size={18} /></button></div>
-      <div className="pt-modal-body"><div className="pt-grid">
-        <label className="pt-field"><span>Job</span><select value={f.projectId} onChange={set("projectId")}>{projects.map((p) => <option key={p.id} value={p.id}>{p.code ? p.code + " — " : ""}{p.name}</option>)}</select></label>
-        <label className="pt-field"><span>Pile number</span><input value={f.pileRef} onChange={set("pileRef")} placeholder="1" /></label>
-        <label className="pt-field"><span>Grid ref</span><input value={f.gridRef} onChange={set("gridRef")} placeholder="C-7" /></label>
-        <label className="pt-field"><span>Pile Ø (mm)</span><input inputMode="decimal" value={f.dia} onChange={set("dia")} placeholder="750" /></label>
-        <label className="pt-field"><span>Grade (MPa)</span><input inputMode="decimal" value={f.grade} onChange={set("grade")} placeholder="50" /></label>
-        <label className="pt-field"><span>Vertical reo (top)</span><input value={f.verticalReo} onChange={set("verticalReo")} placeholder="7N32" /></label>
-        <label className="pt-field"><span>Vertical reo — lower 2 m</span><input value={f.verticalReoLower} onChange={set("verticalReoLower")} placeholder="9N36 (if any)" /></label>
-        <label className="pt-field"><span>Ligs</span><input value={f.ligs} onChange={set("ligs")} placeholder="N12-200" /></label>
-        <label className="pt-field"><span>Socket (m)</span><input inputMode="decimal" value={f.socket} onChange={set("socket")} placeholder="5.45" /></label>
-        <label className="pt-field"><span>Cut-off RL</span><input inputMode="decimal" value={f.cutoffRL} onChange={set("cutoffRL")} placeholder="74.775" /></label>
-        <label className="pt-field"><span>Top of steel RL</span><input inputMode="decimal" value={f.topSteelRL} onChange={set("topSteelRL")} placeholder="75.915" /></label>
-      </div></div>
-      <div className="pt-modal-foot">{!isNew && <button className="pt-btn pt-btn-danger" onClick={() => onDelete(f.id)}><Trash2 size={15} /> Delete</button>}<div className="pt-foot-right"><button className="pt-btn pt-btn-ghost" onClick={onClose}>Cancel</button><button className="pt-btn pt-btn-primary" onClick={() => onSave(f)} disabled={!String(f.pileRef).trim() || !f.projectId}>{isNew ? "Add entry" : "Save"}</button></div></div>
-    </div></div>
-  );
-}
+
 
 /* ───────────────────────── pile row ───────────────────────── */
 function PileRow({ p, projects, onEdit }) {
@@ -425,7 +403,7 @@ export default function PileTracker() {
             return;
         }
         persistProjects([...projects, proj]); 
-        setActive(proj.id);                     
+        setActive(proj.id);
       } catch (error) {
           alert(error)
       }
@@ -436,10 +414,34 @@ export default function PileTracker() {
 
     setShowProject(false); 
   };
-  const saveReg = (f) => { const exists = register.some((x) => x.id === f.id); const rec = { ...f, id: f.id || uid() }; persistRegister(exists ? register.map((x) => (x.id === rec.id ? rec : x)) : [...register, rec]); setEditingReg(null); };
+
+  const saveReg = async(f) => {     
+    const rec = { ...f, id: f.id || uid() }; 
+    try{
+      const res= await fetch(`${BASE_API}/register/saveReg`,{
+          method:"POST",
+          headers: { 
+              "Content-Type": "application/json"
+            },
+          body: JSON.stringify(rec)
+      })
+      const data= await res.json();
+      if(!data.success){
+          alert(data.message);
+          return;
+      }
+      const exists = register.some((x) => x.id === f.id); 
+      persistRegister(exists ? register.map((x) => (x.id === rec.id ? rec : x)) : [...register, rec]); 
+      setEditingReg(null);       
+    }catch(err){
+      alert(err);
+    }
+  };
+
   const deleteReg = (id) => { persistRegister(register.filter((x) => x.id !== id)); setEditingReg(null); };
   
   const doImport = (projectId, rows) => { 
+    console.log(rows)
     persistRegister([...register, ...rows.map((r) => ({ ...r, id: uid(), projectId }))]); 
     setShowImport(false); 
   };
@@ -541,6 +543,19 @@ export default function PileTracker() {
   const regCount = register.filter((r) => active === "all" || r.projectId === active).length;
   const visShown = visible.slice(0, RENDER_CAP);
 
+  const loadRegister= async(projectId)=>{
+    console.log(projectId)
+    // return;
+    try{
+      const res= await fetch(`${BASE_API}/register/loadRegister/${projectId}`);
+      const data = await res.json();
+      setRegister(data.message);
+      setActive(projectId)
+    }catch(err){
+      alert(err);
+    }
+  }
+
   return (
     <div className="pt-app">
       <style>{CSS}</style>
@@ -607,9 +622,22 @@ export default function PileTracker() {
         ) : (
           <>
             <div className="pt-projects">              
-              <button className={"pt-proj" + (active === "all" ? " is-active" : "")} onClick={() => setActive("all")}><Building2 size={14} /> All jobs <span className="pt-proj-count">{view === "register" ? register.length : piles.length}</span></button>
+              <button className={"pt-proj" + (active === "all" ? " is-active" : "")} onClick={() => setActive("all")}>
+                <Building2 size={14} /> All jobs <span className="pt-proj-count">{view === "register" ? register.length : piles.length}</span>
+              </button>
               {projects.map((p) => { 
-                const c = (view === "register" ? register : piles).filter((x) => x.projectId === p.id).length; return <button key={p.id} className={"pt-proj" + (active === p.id ? " is-active" : "")} onClick={() => setActive(p.id)}>{p.code || p.name}<span className="pt-proj-count">{c}</span></button>; })}
+                const c = (view === "register" ? register : piles).filter((x) => x.projectId === p.id).length; 
+                return (
+                  <button
+                    key={p.id}
+                    className={"pt-proj" + (active === p.id ? " is-active" : "")}
+                    onClick={() => loadRegister(p.id)}
+                  >
+                    {p.code || p.name}
+                    <span className="pt-proj-count">{c}</span>
+                  </button>
+                );
+                })}                
               <button className="pt-proj pt-proj-add" onClick={() => setShowProject(true)}><Plus size={14} /> Job</button>
             {active !== "all" && <button className="pt-proj pt-proj-add" onClick={() => setShowProject(projects.find((p) => p.id === active))}><Pencil size={13} /> Edit</button>}
             </div>
@@ -692,9 +720,21 @@ export default function PileTracker() {
             onClose={() => setShowProject(false)} 
           />
         }
-      {editingReg && <RegisterEntryModal entry={editingReg.id ? editingReg : null} projects={projects} defaultProject={editingReg.projectId || (active !== "all" ? active : undefined)} onSave={saveReg} onDelete={deleteReg} onClose={() => setEditingReg(null)} />}
+      {editingReg && 
+        <RegisterEntryModal 
+        entry={editingReg.id ? editingReg : null} 
+        projects={projects} 
+        defaultProject={editingReg.projectId || (active !== "all" ? active : undefined)} 
+        onSave={saveReg} 
+        onDelete={deleteReg} 
+        onClose={() => setEditingReg(null)} />
+      }
       {showImport && 
-        <ImportModal projects={projects} defaultProject={active !== "all" ? active : undefined} onImport={doImport} onClose={() => setShowImport(false)} />
+        <ImportModal 
+        projects={projects} 
+        defaultProject={active !== "all" ? active : undefined} 
+        onImport={doImport} 
+        onClose={() => setShowImport(false)} />
       }
       {
         printData && (          

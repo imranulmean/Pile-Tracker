@@ -11,7 +11,10 @@ export default function ImportModal({ projects, defaultProject, onImport, onClos
     const parsed = useMemo(() => {
       return text.split(/\r?\n/).map((l) => l.replace(/\s+$/, "")).filter((l) => l.trim()).map((line) => {
         const c = line.split(/\t|,/).map((x) => x.trim());
-        if (c.length >= 9) return { pileRef: c[0] || "", dia: c[1] || "", grade: c[2] || "", verticalReo: c[3] || "", verticalReoLower: c[4] || "", ligs: c[5] || "", socket: c[6] || "", cutoffRL: c[7] || "", topSteelRL: c[8] || "" };
+        if (c.length >= 9) return { 
+          pileRef: c[0] || "", dia: c[1] || "", grade: c[2] || "", verticalReo: c[3] || "", verticalReoLower: c[4] || "", ligs: c[5] || "", 
+          socket: c[6] || "", cutoffRL: c[7] || "", topSteelRL: c[8] || "" 
+        };
         return { pileRef: c[0] || "", dia: c[1] || "", grade: c[2] || "", verticalReo: c[3] || "", verticalReoLower: "", ligs: c[4] || "", socket: c[5] || "", cutoffRL: c[6] || "", topSteelRL: c[7] || "" };
       }).filter((r) => r.pileRef && /\d/.test(r.pileRef) && !/^(pile|number|no\b)/i.test(r.pileRef));
     }, [text]);

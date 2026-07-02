@@ -7,9 +7,9 @@ import dotenv from 'dotenv';
 import moment from 'moment';
 import mongoose from 'mongoose';
 import projectRoutes from './routes/project.route.js';
+import registerRoutes from './routes/register.route.js';
 
-// JWT_SECRET=MERN_Blog_AUTH_SECRET
-// MONGO = mongodb://localhost:27017/pile-tracker
+
 dotenv.config();
 mongoose
   .connect(process.env.MONGO)
@@ -17,7 +17,7 @@ mongoose
     console.log('MongoDb is connected');
   })
   .catch((err) => {
-    console.log(err);
+    console.log(err.message);
   });
 
 const app = express();
@@ -41,6 +41,7 @@ app.get('/test', (req, res)=>{
 })
 
 app.use('/project', projectRoutes);
+app.use('/register', registerRoutes);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
