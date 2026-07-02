@@ -1,0 +1,124 @@
+
+import mongoose from 'mongoose';
+
+const ProjectSchema = new mongoose.Schema({
+        id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+        name: { type: String },
+        code: { type: String },
+        location: { type: String },
+        contractNo: { type: String },
+}, { timestamps: true });
+
+export const Project = mongoose.model('Project', ProjectSchema);
+
+
+const PileSchema = new mongoose.Schema({
+    reg:{
+        id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+        projectId: { type: String },
+        pileRef: { type: Number },
+        dia: { type: Number },
+        grade: { type: Number },
+        verticalReo: { type: String },
+        verticalReoLower: { type: String },
+        ligs: { type: String },
+        socket: { type: Number },
+        cutoffRL: { type: Number },
+        topSteelRL: { type: Number },
+        cancelled: { type: Boolean }
+    },
+    trk:{},
+    status: {type: String, default: "missing" },
+}, { timestamps: true });
+
+
+export const Pile = mongoose.model('Pile', PileSchema);
+
+
+
+without pile record 
+
+{
+    "reg": {
+        "id": "mr24g62qjs1dc",
+        "projectId": "mr24g62q2bilv",
+        "pileRef": "1",
+        "dia": 750,
+        "grade": 50,
+        "verticalReo": "7N32",
+        "verticalReoLower": "",
+        "ligs": "N12-200",
+        "socket": 5.45,
+        "cutoffRL": 74.775,
+        "topSteelRL": 75.915,
+        "cancelled": false
+    },
+    "status": "missing",
+    "detail": "",
+    trk:undefined
+}
+with pile record 
+
+{
+    "reg": {
+        "id": "mr24g62qjs1dc",
+        "projectId": "mr24g62q2bilv",
+        "pileRef": "1",
+        "dia": 750,
+        "grade": 50,
+        "verticalReo": "7N32",
+        "verticalReoLower": "",
+        "ligs": "N12-200",
+        "socket": 5.45,
+        "cutoffRL": 74.775,
+        "topSteelRL": 75.915,
+        "cancelled": false
+    },
+    "trk": {
+        "pileRef": "1",
+        "dia": 750,
+        "grade": 50,
+        "verticalReo": "7N32",
+        "verticalReoLower": "",
+        "ligs": "N12-200",
+        "socket": 5.45,
+        "cutoffRL": 74.775,
+        "topSteelRL": 75.915,
+        "concreteDocket": "",
+        "actualDia": "",
+        "actualDepth": "",
+        "drillDate": "",
+        "driller": "",
+        "cageStatus": "Not installed",
+        "pourDate": "",
+        "concreteVol": "",
+        "deliveredGrade": "",
+        "qaStatus": "Pending",
+        "qaInspector": "",
+        "qaNotes": "",
+        "projectId": "mr24g62q2bilv",
+        "id": "mr24g62qjs1dc",
+        "hp": {
+            "drill": {
+                "released": false,
+                "inspector": "",
+                "date": "",
+                "hasPhoto": false
+            },
+            "cage": {
+                "released": false,
+                "inspector": "",
+                "date": "",
+                "hasPhoto": false
+            },
+            "pour": {
+                "released": false,
+                "inspector": "",
+                "date": "",
+                "hasPhoto": false
+            }
+        }
+    },
+    "status": "matched",
+    "detail": ""
+}

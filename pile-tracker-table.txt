@@ -1,0 +1,53 @@
+projectTable:{
+    'id':uid(),
+    'name':String,
+    'code':String,
+    'location': String,
+    'contractNo': String,
+    'createdAt': Date(),
+    'updatedAt': Date()
+}
+
+registerEntryTable:{
+    projectId: projectTable_id;
+    id: uid(),
+    pileRef: String,
+    dia:Number,
+    grade:Number,
+    verticalReo:String,
+    verticalReoLower: String,
+    ligs: String,
+    socket: Number,
+    cutoffRL: Number,
+    topSteelRL: Number,
+    gridRef: String,
+    cancelled: Boolean
+}
+
+pileRecordTable:{
+    pileId: registerEntryTable_id,
+    actualDia:String,
+    actualDepth:String,
+    drillDate: Date(),
+    driller: String,
+    driller_hp_released: Boolean,
+    driller_hp_inspector: String,
+    driller_hp_date: Date(),
+    driller_hp_photo:String,
+    cageStatus: String,
+    cage_hp_released: Boolean,
+    cage_hp_inspector: String,
+    cage_hp_date: Date(),
+    cage_hp_photo:String,
+    pourDate: Date(),
+    concreteVol: String,
+    concreteDocket: String,
+    deliveredGrade: String,
+    pour_hp_released: Boolean,
+    pour_hp_inspector: String,
+    pour_hp_date: Date(),
+    pour_hp_photo:String,
+    qaStatus: String,
+    qaInspector: String,
+    qaNotes: String
+}

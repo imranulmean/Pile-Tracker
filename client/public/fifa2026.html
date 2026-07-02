@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA World Cup 2026 - Schedule by Date (BST)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --time-color: #34d399;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+        header {
+            text-align: center;
+            padding: 24px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        h1 {
+            color: var(--accent-blue);
+            font-size: 1.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Search */
+        .search-bar {
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .search-bar input {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            display: block;
+            margin: 0 auto;
+        }
+        .search-bar input:focus { border-color: var(--accent-blue); }
+        #matchCount {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* Date nav tabs */
+        .date-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 6px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-blue) var(--card-bg); 
+        }
+        /* .date-tabs::-webkit-scrollbar { display: none; } */
+        .date-tab {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .date-tab:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .date-tab.active { background: var(--accent-blue); color: #0f172a; border-color: var(--accent-blue); font-weight: 600; }
+        .date-tab.knockout-tab { border-color: var(--accent-rose); color: var(--accent-rose); }
+        .date-tab.knockout-tab.active { background: var(--accent-rose); color: #fff; }
+
+        /* Content */
+        .container { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+        .date-section { margin-bottom: 28px; }
+        .date-section.hidden { display: none; }
+
+        .date-heading {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 10px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .date-heading.knockout { color: var(--accent-rose); border-left-color: var(--accent-rose); }
+
+        /* Match cards */
+        .match-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .match-card.hidden { display: none; }
+        .match-card:hover { border-color: var(--accent-blue); }
+        .match-card.knockout-card:hover { border-color: var(--accent-rose); }
+
+        .match-num {
+            color: var(--accent-blue);
+            font-weight: 700;
+            font-size: 13px;
+            min-width: 28px;
+        }
+        .knockout-card .match-num { color: var(--accent-rose); }
+
+        .match-info { flex: 1; min-width: 0; }
+        .match-teams {
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .match-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .match-venue { color: var(--text-muted); }
+
+        .match-right { text-align: right; flex-shrink: 0; }
+        .match-time {
+            font-weight: 700;
+            color: var(--time-color);
+            font-size: 14px;
+        }
+        .match-group {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.2rem; }
+            .match-teams { font-size: 13px; white-space: normal; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>FIFA World Cup 2026™</h1>
+    <p class="subtitle">104-Match Schedule by Date | Bangladesh Standard Time (BST)</p>
+</header>
+
+<!-- Search -->
+<div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search team, venue, match..." oninput="doSearch()" />
+    <p id="matchCount"></p>
+</div>
+
+<!-- Date tabs -->
+<div class="date-tabs" id="dateTabs"></div>
+
+<!-- Matches -->
+<div class="container" id="matchContainer"></div>
+
+<script>
+var matches = [
+    // June 12
+    {num:1, date:'Fri, June 12', dateKey:'Jun12', teams:'Mexico vs South Africa', time:'1:00 AM', venue:'Mexico City Stadium', group:'Group A'},
+    {num:2, date:'Fri, June 12', dateKey:'Jun12', teams:'South Korea vs Czechia', time:'8:00 AM', venue:'Guadalajara Stadium', group:'Group A'},
+    // June 13
+    {num:3, date:'Sat, June 13', dateKey:'Jun13', teams:'Canada vs Bosnia & Herzegovina', time:'1:00 AM', venue:'Toronto Stadium', group:'Group B'},
+    {num:4, date:'Sat, June 13', dateKey:'Jun13', teams:'USA vs Paraguay', time:'7:00 AM', venue:'Los Angeles Stadium', group:'Group D'},
+    // June 14
+    {num:5, date:'Sun, June 14', dateKey:'Jun14', teams:'Qatar vs Switzerland', time:'1:00 AM', venue:'San Francisco Bay Area', group:'Group B'},
+    {num:6, date:'Sun, June 14', dateKey:'Jun14', teams:'Brazil vs Morocco', time:'4:00 AM', venue:'New York New Jersey', group:'Group C'},
+    {num:7, date:'Sun, June 14', dateKey:'Jun14', teams:'Haiti vs Scotland', time:'7:00 AM', venue:'Boston Stadium', group:'Group C'},
+    {num:8, date:'Sun, June 14', dateKey:'Jun14', teams:'Australia vs Türkiye', time:'10:00 AM', venue:'BC Place, Vancouver', group:'Group D'},
+    // June 15
+    {num:9, date:'Sun, June 14', dateKey:'Jun14', teams:'Germany vs Curaçao', time:'11:00 PM', venue:'Houston Stadium', group:'Group E'},
+    {num:10, date:'Mon, June 15', dateKey:'Jun15', teams:'Netherlands vs Japan', time:'2:00 AM', venue:'Dallas Stadium', group:'Group F'},
+    {num:11, date:'Mon, June 15', dateKey:'Jun15', teams:'Ivory Coast vs Ecuador', time:'5:00 AM', venue:'Philadelphia Stadium', group:'Group E'},
+    {num:12, date:'Mon, June 15', dateKey:'Jun15', teams:'Sweden vs Tunisia', time:'8:00 AM', venue:'Monterrey Stadium', group:'Group F'},
+    {num:13, date:'Mon, June 15', dateKey:'Jun15', teams:'Spain vs Cape Verde', time:'10:00 PM', venue:'Atlanta Stadium', group:'Group H'},
+    // June 16
+    {num:14, date:'Tue, June 16', dateKey:'Jun16', teams:'Belgium vs Egypt', time:'1:00 AM', venue:'Seattle Stadium', group:'Group G'},
+    {num:15, date:'Tue, June 16', dateKey:'Jun16', teams:'Saudi Arabia vs Uruguay', time:'4:00 AM', venue:'Miami Stadium', group:'Group H'},
+    {num:16, date:'Tue, June 16', dateKey:'Jun16', teams:'Iran vs New Zealand', time:'7:00 AM', venue:'Los Angeles Stadium', group:'Group G'},
+    // June 17
+    {num:17, date:'Wed, June 17', dateKey:'Jun17', teams:'France vs Senegal', time:'1:00 AM', venue:'New York New Jersey', group:'Group I'},
+    {num:18, date:'Wed, June 17', dateKey:'Jun17', teams:'Iraq vs Norway', time:'4:00 AM', venue:'Boston Stadium', group:'Group I'},
+    {num:19, date:'Wed, June 17', dateKey:'Jun17', teams:'Argentina vs Algeria', time:'7:00 AM', venue:'Kansas City Stadium', group:'Group J'},
+    {num:20, date:'Wed, June 17', dateKey:'Jun17', teams:'Austria vs Jordan', time:'10:00 AM', venue:'San Francisco Bay Area', group:'Group J'},
+    {num:21, date:'Wed, June 17', dateKey:'Jun17', teams:'Portugal vs Congo DR', time:'11:00 PM', venue:'Houston Stadium', group:'Group K'},
+    // June 18
+    {num:22, date:'Thu, June 18', dateKey:'Jun18', teams:'England vs Croatia', time:'2:00 AM', venue:'Dallas Stadium', group:'Group L'},
+    {num:23, date:'Thu, June 18', dateKey:'Jun18', teams:'Ghana vs Panama', time:'5:00 AM', venue:'Toronto Stadium', group:'Group L'},
+    {num:24, date:'Thu, June 18', dateKey:'Jun18', teams:'Uzbekistan vs Colombia', time:'8:00 AM', venue:'Mexico City Stadium', group:'Group K'},
+    {num:25, date:'Thu, June 18', dateKey:'Jun18', teams:'Czechia vs South Africa', time:'10:00 PM', venue:'Atlanta Stadium', group:'Group A'},
+    // June 19
+    {num:26, date:'Fri, June 19', dateKey:'Jun19', teams:'Switzerland vs Bosnia & Herzegovina', time:'1:00 AM', venue:'Los Angeles Stadium', group:'Group B'},
+    {num:27, date:'Fri, June 19', dateKey:'Jun19', teams:'Canada vs Qatar', time:'4:00 AM', venue:'BC Place, Vancouver', group:'Group B'},
+    {num:28, date:'Fri, June 19', dateKey:'Jun19', teams:'Mexico vs South Korea', time:'7:00 AM', venue:'Guadalajara Stadium', group:'Group A'},
+    {num:29, date:'Fri, June 19', dateKey:'Jun19', teams:'USA vs Australia', time:'10:00 PM', venue:'Seattle Stadium', group:'Group D'},
+    // June 20
+    {num:30, date:'Sat, June 20', dateKey:'Jun20', teams:'Scotland vs Morocco', time:'1:00 AM', venue:'Boston Stadium', group:'Group C'},
+    {num:31, date:'Sat, June 20', dateKey:'Jun20', teams:'Brazil vs Haiti', time:'3:30 AM', venue:'Philadelphia Stadium', group:'Group C'},
+    {num:32, date:'Sat, June 20', dateKey:'Jun20', teams:'Türkiye vs Paraguay', time:'6:00 AM', venue:'San Francisco Bay Area', group:'Group D'},
+    {num:33, date:'Sat, June 20', dateKey:'Jun20', teams:'Netherlands vs Sweden', time:'11:00 PM', venue:'Houston Stadium', group:'Group F'},
+    // June 21
+    {num:34, date:'Sun, June 21', dateKey:'Jun21', teams:'Germany vs Ivory Coast', time:'2:00 AM', venue:'Toronto Stadium', group:'Group E'},
+    {num:35, date:'Sun, June 21', dateKey:'Jun21', teams:'Ecuador vs Curaçao', time:'5:00 AM', venue:'Kansas City Stadium', group:'Group E'},
+    {num:36, date:'Sun, June 21', dateKey:'Jun21', teams:'Tunisia vs Japan', time:'8:00 AM', venue:'Monterrey Stadium', group:'Group F'},
+    {num:37, date:'Sun, June 21', dateKey:'Jun21', teams:'Spain vs Saudi Arabia', time:'10:00 PM', venue:'Atlanta Stadium', group:'Group H'},
+    // June 22
+    {num:38, date:'Mon, June 22', dateKey:'Jun22', teams:'Belgium vs Iran', time:'1:00 AM', venue:'Los Angeles Stadium', group:'Group G'},
+    {num:39, date:'Mon, June 22', dateKey:'Jun22', teams:'Uruguay vs Cape Verde', time:'4:00 AM', venue:'Miami Stadium', group:'Group H'},
+    {num:40, date:'Mon, June 22', dateKey:'Jun22', teams:'New Zealand vs Egypt', time:'7:00 AM', venue:'Seattle Stadium', group:'Group G'},
+    {num:41, date:'Mon, June 22', dateKey:'Jun22', teams:'Argentina vs Austria', time:'11:00 PM', venue:'Dallas Stadium', group:'Group J'},
+    // June 23
+    {num:42, date:'Tue, June 23', dateKey:'Jun23', teams:'France vs Iraq', time:'3:00 AM', venue:'Philadelphia Stadium', group:'Group I'},
+    {num:43, date:'Tue, June 23', dateKey:'Jun23', teams:'Norway vs Senegal', time:'6:00 AM', venue:'New York New Jersey', group:'Group I'},
+    {num:44, date:'Tue, June 23', dateKey:'Jun23', teams:'Jordan vs Algeria', time:'9:00 AM', venue:'San Francisco Bay Area', group:'Group J'},
+    {num:45, date:'Tue, June 23', dateKey:'Jun23', teams:'Portugal vs Uzbekistan', time:'11:00 PM', venue:'Houston Stadium', group:'Group K'},
+    // June 24
+    {num:46, date:'Wed, June 24', dateKey:'Jun24', teams:'England vs Ghana', time:'2:00 AM', venue:'Boston Stadium', group:'Group L'},
+    {num:47, date:'Wed, June 24', dateKey:'Jun24', teams:'Panama vs Croatia', time:'5:00 AM', venue:'Toronto Stadium', group:'Group L'},
+    {num:48, date:'Wed, June 24', dateKey:'Jun24', teams:'Colombia vs Congo DR', time:'8:00 AM', venue:'Guadalajara Stadium', group:'Group K'},
+    // June 25
+    {num:49, date:'Thu, June 25', dateKey:'Jun25', teams:'Switzerland vs Canada', time:'1:00 AM', venue:'Vancouver Stadium', group:'Group B'},
+    {num:50, date:'Thu, June 25', dateKey:'Jun25', teams:'Bosnia & Herzegovina vs Qatar', time:'1:00 AM', venue:'Seattle Stadium', group:'Group B'},
+    {num:51, date:'Thu, June 25', dateKey:'Jun25', teams:'Morocco vs Haiti', time:'4:00 AM', venue:'Atlanta Stadium', group:'Group C'},
+    {num:52, date:'Thu, June 25', dateKey:'Jun25', teams:'Scotland vs Brazil', time:'4:00 AM', venue:'Miami Stadium', group:'Group C'},
+    {num:53, date:'Thu, June 25', dateKey:'Jun25', teams:'Czechia vs Mexico', time:'7:00 AM', venue:'Mexico City Stadium', group:'Group A'},
+    {num:54, date:'Thu, June 25', dateKey:'Jun25', teams:'South Africa vs South Korea', time:'7:00 AM', venue:'Monterrey Stadium', group:'Group A'},
+    {num:55, date:'Thu, June 25', dateKey:'Jun25', teams:'Curaçao vs Ivory Coast', time:'11:00 PM', venue:'Philadelphia Stadium', group:'Group E'},
+    {num:56, date:'Thu, June 25', dateKey:'Jun25', teams:'Ecuador vs Germany', time:'11:00 PM', venue:'New York New Jersey', group:'Group E'},
+    // June 26
+    {num:57, date:'Fri, June 26', dateKey:'Jun26', teams:'Tunisia vs Netherlands', time:'2:00 AM', venue:'Kansas City Stadium', group:'Group F'},
+    {num:58, date:'Fri, June 26', dateKey:'Jun26', teams:'Japan vs Sweden', time:'2:00 AM', venue:'Dallas Stadium', group:'Group F'},
+    {num:59, date:'Fri, June 26', dateKey:'Jun26', teams:'Australia vs Paraguay', time:'5:00 AM', venue:'San Francisco Bay Area', group:'Group D'},
+    {num:60, date:'Fri, June 26', dateKey:'Jun26', teams:'Türkiye vs USA', time:'5:00 AM', venue:'Los Angeles Stadium', group:'Group D'},
+    {num:61, date:'Fri, June 26', dateKey:'Jun26', teams:'Norway vs France', time:'1:00 AM', venue:'Boston Stadium', group:'Group I'},
+    {num:62, date:'Fri, June 26', dateKey:'Jun26', teams:'Senegal vs Iraq', time:'1:00 AM', venue:'Toronto Stadium', group:'Group I'},
+    {num:63, date:'Fri, June 26', dateKey:'Jun26', teams:'Uruguay vs Spain', time:'6:00 AM', venue:'Guadalajara Stadium', group:'Group H'},
+    {num:64, date:'Fri, June 26', dateKey:'Jun26', teams:'Cape Verde vs Saudi Arabia', time:'6:00 AM', venue:'Houston Stadium', group:'Group H'},
+    // June 27
+    {num:65, date:'Sat, June 27', dateKey:'Jun27', teams:'New Zealand vs Belgium', time:'9:00 AM', venue:'Vancouver Stadium', group:'Group G'},
+    {num:66, date:'Sat, June 27', dateKey:'Jun27', teams:'Egypt vs Iran', time:'9:00 AM', venue:'Seattle Stadium', group:'Group G'},
+    {num:67, date:'Sat, June 27', dateKey:'Jun27', teams:'Croatia vs Ghana', time:'3:00 AM', venue:'Philadelphia Stadium', group:'Group L'},
+    {num:68, date:'Sat, June 27', dateKey:'Jun27', teams:'Panama vs England', time:'3:00 AM', venue:'New York New Jersey', group:'Group L'},
+    {num:69, date:'Sat, June 27', dateKey:'Jun27', teams:'DR Congo vs Uzbekistan', time:'5:30 AM', venue:'Atlanta Stadium', group:'Group K'},
+    {num:70, date:'Sat, June 27', dateKey:'Jun27', teams:'Colombia vs Portugal', time:'5:30 AM', venue:'Miami Stadium', group:'Group K'},
+    // June 28
+    {num:71, date:'Sun, June 28', dateKey:'Jun28', teams:'Jordan vs Argentina', time:'8:00 AM', venue:'Dallas Stadium', group:'Group J'},
+    {num:72, date:'Sun, June 28', dateKey:'Jun28', teams:'Algeria vs Austria', time:'8:00 AM', venue:'Kansas City Stadium', group:'Group J'},
+    // Knockout - Round of 32
+    {num:73, date:'Mon, June 29', dateKey:'Jun29', teams:'Group A Champion vs Group C Runner-up', time:'1:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:74, date:'Mon, June 29', dateKey:'Jun29', teams:'Group E Champion vs Group I Runner-up', time:'5:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:75, date:'Tue, June 30', dateKey:'Jun30', teams:'Group F Champion vs Group C 3rd Place', time:'2:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:76, date:'Tue, June 30', dateKey:'Jun30', teams:'Group C Champion vs Group F Runner-up', time:'6:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:77, date:'Wed, July 1', dateKey:'Jul01', teams:'Group I Champion vs Group E 3rd Place', time:'1:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:78, date:'Wed, July 1', dateKey:'Jul01', teams:'Group E Runner-up vs Group I Runner-up', time:'5:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:79, date:'Wed, July 1', dateKey:'Jul01', teams:'Group A Runner-up vs Group B Runner-up', time:'9:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:80, date:'Thu, July 2', dateKey:'Jul02', teams:'Group B Champion vs Group F 3rd Place', time:'2:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:81, date:'Thu, July 2', dateKey:'Jul02', teams:'Group D Champion vs Group B 3rd Place', time:'6:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:82, date:'Thu, July 2', dateKey:'Jul02', teams:'Group G Champion vs Group A 3rd Place', time:'10:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:83, date:'Fri, July 3', dateKey:'Jul03', teams:'Group H Champion vs Group J Runner-up', time:'1:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:84, date:'Fri, July 3', dateKey:'Jul03', teams:'Group D Runner-up vs Group H Runner-up', time:'5:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:85, date:'Fri, July 3', dateKey:'Jul03', teams:'Group J Champion vs Group D 3rd Place', time:'9:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:86, date:'Sat, July 4', dateKey:'Jul04', teams:'Group K Champion vs Group L Runner-up', time:'2:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:87, date:'Sat, July 4', dateKey:'Jul04', teams:'Group L Champion vs Group G 3rd Place', time:'6:00 AM', venue:'', group:'Round of 32', knockout:true},
+    {num:88, date:'Sat, July 4', dateKey:'Jul04', teams:'Group G Runner-up vs Group K Runner-up', time:'10:00 AM', venue:'', group:'Round of 32', knockout:true},
+    // Round of 16
+    {num:89, date:'Sun, July 5', dateKey:'Jul05', teams:'Match 73 Winner vs Match 74 Winner', time:'2:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:90, date:'Sun, July 5', dateKey:'Jul05', teams:'Match 75 Winner vs Match 76 Winner', time:'6:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:91, date:'Mon, July 6', dateKey:'Jul06', teams:'Match 77 Winner vs Match 78 Winner', time:'2:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:92, date:'Mon, July 6', dateKey:'Jul06', teams:'Match 79 Winner vs Match 80 Winner', time:'6:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:93, date:'Tue, July 7', dateKey:'Jul07', teams:'Match 81 Winner vs Match 82 Winner', time:'2:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:94, date:'Tue, July 7', dateKey:'Jul07', teams:'Match 83 Winner vs Match 84 Winner', time:'6:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:95, date:'Wed, July 8', dateKey:'Jul08', teams:'Match 85 Winner vs Match 86 Winner', time:'2:00 AM', venue:'', group:'Round of 16', knockout:true},
+    {num:96, date:'Wed, July 8', dateKey:'Jul08', teams:'Match 87 Winner vs Match 88 Winner', time:'6:00 AM', venue:'', group:'Round of 16', knockout:true},
+    // Quarter Finals
+    {num:97, date:'Fri, July 10', dateKey:'Jul10', teams:'Match 89 Winner vs Match 90 Winner', time:'4:00 AM', venue:'', group:'Quarter-Finals', knockout:true},
+    {num:98, date:'Sat, July 11', dateKey:'Jul11', teams:'Match 91 Winner vs Match 92 Winner', time:'2:00 AM', venue:'', group:'Quarter-Finals', knockout:true},
+    {num:99, date:'Sat, July 11', dateKey:'Jul11', teams:'Match 93 Winner vs Match 94 Winner', time:'6:00 AM', venue:'', group:'Quarter-Finals', knockout:true},
+    {num:100, date:'Sun, July 12', dateKey:'Jul12', teams:'Match 95 Winner vs Match 96 Winner', time:'4:00 AM', venue:'', group:'Quarter-Finals', knockout:true},
+    // Semi Finals
+    {num:101, date:'Wed, July 15', dateKey:'Jul15', teams:'Match 97 Winner vs Match 98 Winner', time:'5:00 AM', venue:'', group:'Semi-Finals', knockout:true},
+    {num:102, date:'Thu, July 16', dateKey:'Jul16', teams:'Match 99 Winner vs Match 100 Winner', time:'5:00 AM', venue:'', group:'Semi-Finals', knockout:true},
+    // Finals
+    {num:103, date:'Sun, July 19', dateKey:'Jul19', teams:'Third-Place Playoff: Match 101 Loser vs Match 102 Loser', time:'1:00 AM', venue:'', group:'Third Place', knockout:true},
+    {num:104, date:'Mon, July 20', dateKey:'Jul20', teams:'FIFA World Cup Final: Match 101 Winner vs Match 102 Winner', time:'1:00 AM', venue:'MetLife Stadium', group:'FINAL', knockout:true},
+];
+
+// Build date groups
+var dateGroups = {};
+var dateOrder = [];
+matches.forEach(function(m) {
+    if (!dateGroups[m.dateKey]) {
+        dateGroups[m.dateKey] = { label: m.date, matches: [], knockout: !!m.knockout };
+        dateOrder.push(m.dateKey);
+    }
+    dateGroups[m.dateKey].matches.push(m);
+    if (m.knockout) dateGroups[m.dateKey].knockout = true;
+});
+
+var activeTab = 'all';
+
+// Build tabs
+function buildTabs() {
+    var tabs = document.getElementById('dateTabs');
+    var allBtn = document.createElement('button');
+    allBtn.className = 'date-tab active';
+    allBtn.textContent = 'All';
+    allBtn.onclick = function() { setTab('all'); };
+    allBtn.id = 'tab-all';
+    tabs.appendChild(allBtn);
+
+    dateOrder.forEach(function(key) {
+        var g = dateGroups[key];
+        var btn = document.createElement('button');
+        btn.className = 'date-tab' + (g.knockout ? ' knockout-tab' : '');
+        // Short label
+        var short = g.label.replace(/\w+, /, '').replace('June ', 'Jun ').replace('July ', 'Jul ');
+        btn.textContent = short;
+        btn.id = 'tab-' + key;
+        btn.onclick = (function(k) { return function() { setTab(k); }; })(key);
+        tabs.appendChild(btn);
+    });
+}
+
+function setTab(key) {
+    activeTab = key;
+    // update tab styles
+    document.querySelectorAll('.date-tab').forEach(function(t) { t.classList.remove('active'); });
+    var activeEl = document.getElementById('tab-' + key);
+    if (activeEl) activeEl.classList.add('active');
+    // scroll tab into view
+    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+    document.querySelectorAll('.date-section').forEach(function(s) {
+        if (key === 'all' || s.dataset.key === key) {
+            s.classList.remove('hidden');
+        } else {
+            s.classList.add('hidden');
+        }
+    });
+    doSearch();
+}
+
+// Build match sections
+function buildSections() {
+    var container = document.getElementById('matchContainer');
+    container.innerHTML = '';
+    dateOrder.forEach(function(key) {
+        var g = dateGroups[key];
+        var section = document.createElement('div');
+        section.className = 'date-section';
+        section.dataset.key = key;
+
+        var heading = document.createElement('div');
+        heading.className = 'date-heading' + (g.knockout ? ' knockout' : '');
+        heading.textContent = g.label;
+        section.appendChild(heading);
+
+        g.matches.forEach(function(m) {
+            var card = document.createElement('div');
+            card.className = 'match-card' + (m.knockout ? ' knockout-card' : '');
+            card.dataset.search = (m.teams + ' ' + m.venue + ' ' + m.group + ' ' + m.num).toLowerCase();
+
+            card.innerHTML =
+                '<div class="match-num">#' + m.num + '</div>' +
+                '<div class="match-info">' +
+                    '<div class="match-teams">' + m.teams + '</div>' +
+                    '<div class="match-meta">' +
+                        '<span class="match-group">' + m.group + '</span>' +
+                        (m.venue ? '<span class="match-venue">📍 ' + m.venue + '</span>' : '') +
+                    '</div>' +
+                '</div>' +
+                '<div class="match-right">' +
+                    '<div class="match-time">' + m.time + '</div>' +
+                '</div>';
+
+            section.appendChild(card);
+        });
+
+        container.appendChild(section);
+    });
+}
+
+function doSearch() {
+    var q = document.getElementById('searchInput').value.toLowerCase().trim();
+    var visible = 0;
+
+    document.querySelectorAll('.date-section').forEach(function(section) {
+        var key = section.dataset.key;
+        var sectionVisible = activeTab === 'all' || key === activeTab;
+        if (!sectionVisible) { section.classList.add('hidden'); return; }
+        section.classList.remove('hidden');
+
+        var cards = section.querySelectorAll('.match-card');
+        var anyVisible = false;
+        cards.forEach(function(card) {
+            if (!q || card.dataset.search.indexOf(q) !== -1) {
+                card.classList.remove('hidden');
+                anyVisible = true;
+                visible++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+        if (q && !anyVisible) section.classList.add('hidden');
+    });
+
+    document.getElementById('matchCount').textContent = q ? visible + ' match' + (visible !== 1 ? 'es' : '') + ' found' : '';
+}
+
+function selectToday() {
+    var now = new Date();
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var month = months[now.getMonth()];
+    var day = now.getDate();
+    var key = month + (day < 10 ? '0' + day : day);
+
+    console.log('Today key:', key);
+    console.log('Available keys:', dateOrder);
+
+    var todayStr = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    var sub = document.querySelector('.subtitle');
+    if (sub) sub.innerHTML = '104-Match Schedule by Date | Bangladesh Standard Time (BST)<br><span style="color:var(--time-color);font-size:0.85rem;">📅 Today: ' + todayStr + '</span>';
+
+    var todayTab = document.getElementById('tab-' + key);
+    console.log('Tab found:', todayTab);
+
+    if (todayTab) {
+        todayTab.style.outline = '2px solid var(--time-color)';
+        todayTab.style.outlineOffset = '2px';
+        setTab(key);
+    }
+}
+
+buildTabs();
+buildSections();
+selectToday(); 
+</script>
+</body>
+</html>
