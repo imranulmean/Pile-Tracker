@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import {
+  Plus, Search, Download, X, Trash2, Pencil, FolderPlus, AlertTriangle,
+  CheckCircle2, HardHat, Building2, MoreHorizontal, Info, Camera, Upload,
+  ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer
+} from "lucide-react";
 
 export default function RegisterEntryModal({ entry, projects, defaultProject, onSave, onDelete, onClose }) {
     const [f, setF] = useState(() => ({ pileRef: "", dia: "", grade: "", verticalReo: "", verticalReoLower: "", ligs: "", socket: "", cutoffRL: "", topSteelRL: "", gridRef: "", projectId: defaultProject || projects[0]?.id || "", ...entry }));

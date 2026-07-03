@@ -348,8 +348,6 @@ export default function PileTracker() {
   }, []);
 
   const savePile = async (f, photos) => {
-    console.log(f)
-    console.log(photos)
     const exists = piles.some((x) => x.id === f.id); 
     const id = f.id || uid();
     const hp = { 
@@ -366,6 +364,21 @@ export default function PileTracker() {
       } 
     }
     const rec = { ...f, id, hp };
+    console.log(rec)
+    // return;
+    try{
+      const res= await fetch(`${BASE_API}/pile/savePile`,{
+        method:"POST",
+        headers:{
+          'content-type' : 'application/json'
+        },
+        body:JSON.stringify(rec)
+      })
+      const data= await res.json();
+      console.log(data);
+    }catch(err){
+      alert(err);
+    }
     persistPiles(exists ? piles.map((x) => (x.id === id ? rec : x)) : [...piles, rec]); 
     setEditing(null);
   };
@@ -460,6 +473,7 @@ export default function PileTracker() {
       cutoffRL: reg.cutoffRL,
       topSteelRL: reg.topSteelRL,
       gridRef: reg.gridRef,
+      registerId:reg.id
     });  
   
   const loadSchedule = () => { 
@@ -544,12 +558,13 @@ export default function PileTracker() {
   const visShown = visible.slice(0, RENDER_CAP);
 
   const loadRegister= async(projectId)=>{
-    console.log(projectId)
     // return;
     try{
       const res= await fetch(`${BASE_API}/register/loadRegister/${projectId}`);
       const data = await res.json();
-      setRegister(data.message);
+      console.log(data)
+      setRegister(data.register);
+      setPiles(data.piles)
       setActive(projectId)
     }catch(err){
       alert(err);

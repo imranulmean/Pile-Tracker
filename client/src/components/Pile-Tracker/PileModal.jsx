@@ -71,12 +71,12 @@ function PhotoBox({ data, onPick, onRemove, label }) {
     );
   }
   function HoldPoint({ title, sub, hp, photo, onChange, onPhoto, onPhotoRemove }) {
-  
     return (
       <div className={"pt-hp" + (hp.released ? " is-released" : "")}>
         <div className="pt-hp-head">
           <div><div className="pt-hp-title"><ShieldCheck size={14} /> {title}</div><div className="pt-hp-sub">{sub}</div></div>
-          <label className="pt-switch"><input type="checkbox" checked={!!hp.released} onChange={(e) => onChange({ ...hp, released: e.target.checked })} /><span className="pt-switch-track"><span className="pt-switch-thumb" /></span><span className="pt-switch-label">{hp.released ? "Released" : "Open"}</span></label>
+          <label className="pt-switch">
+            <input type="checkbox" checked={!!hp.released} onChange={(e) => onChange({ ...hp, released: e.target.checked })} /><span className="pt-switch-track"><span className="pt-switch-thumb" /></span><span className="pt-switch-label">{hp.released ? "Released" : "Open"}</span></label>
         </div>
         <div className="pt-hp-body">
           <div className="pt-hp-fields">
@@ -91,7 +91,7 @@ function PhotoBox({ data, onPick, onRemove, label }) {
 
   
 export default function PileModal({ pile, projects, defaultProject, onSave, onDelete, onPrint, onClose }) {
-
+    console.log(pile)
     const [f, setF] = useState(() => ({ ...FIELD_DEFAULTS, projectId: defaultProject || projects[0]?.id || "", ...pile, hp: getHp(pile || {}) }));
     const [photos, setPhotos] = useState({ drill: null, cage: null, pour: null });
     const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));

@@ -14,16 +14,51 @@ const RegisterSchema = new mongoose.Schema({
     topSteelRL: { type: String },
     gridRef: { type: String },
     cancelled: { type: Boolean, default: false }
-},{ timestamps: true },{_id:false})
+},{ timestamps: true })
 
 export const Register= mongoose.model("Register", RegisterSchema);
 
-// const TrkSchema = new mongoose.Schema({},{ timestamps: true },{_id:false})
+const PileSchema = new mongoose.Schema({
+    ...RegisterSchema.obj,
+    registerId: { type: String},
+    id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+    actualDepth: { type: String },
+    actualDia: { type: String },
+    cageStatus: { type: String },
+    concreteDocket: { type: String },
+    concreteVol: { type: String },
+    cutoffRL: { type: String },
+    deliveredGrade: { type: String },
+    dia: { type: String },
+    drillDate: { type: String },
+    driller: { type: String },
+    grade: { type: String },
+    gridRef: { type: String },
+    hp:{
+        cage:{
+            date: { type: String },
+            hasPhoto: { type: String },
+            inspector: { type: String },
+            released: { type: Boolean, default: false },
+        },
+        drill:{
+            date: { type: String },
+            hasPhoto: { type: String },
+            inspector: { type: String },
+            released: { type: Boolean, default: false },
+        },
+        pour:{
+            date: { type: String },
+            hasPhoto: { type: String },
+            inspector: { type: String },
+            released: { type: Boolean, default: false },
+        }
+    },
+    pourDate: { type: String },
+    projectId: { type: String },
+    qaInspector: { type: String },
+    qaNotes: { type: String },
+    qaStatus: { type: String }
+},{ timestamps: true })
 
-// const PileSchema = new mongoose.Schema({
-//     reg: RegisterSchema,
-//     trk:TrkSchema,
-// }, { timestamps: true });
-
-
-// export const Pile = mongoose.model('Pile', PileSchema);
+export const Pile= mongoose.model("Pile", PileSchema);

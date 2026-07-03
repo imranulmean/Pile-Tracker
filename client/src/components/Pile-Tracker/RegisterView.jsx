@@ -17,6 +17,7 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
         cancelled: { label: "Cancelled", color: "#B9C0C9" },
       };
       function reconcile(register, piles, projectId) {
+        // register= register.map(r=> r['registerId']=r.id);
         const reg = register.filter((r) => projectId === "all" || r.projectId === projectId);
         const trk = piles.filter((p) => projectId === "all" || p.projectId === projectId);
         const byKey = {}; 
