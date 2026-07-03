@@ -58,7 +58,12 @@ const PileSchema = new mongoose.Schema({
     projectId: { type: String },
     qaInspector: { type: String },
     qaNotes: { type: String },
-    qaStatus: { type: String }
+    qaStatus: { type: String },
+    photos:{
+        drill: { type: String, default:null }, 
+        cage: { type: String, default:null }, 
+        pour: { type: String, default:null }
+    }
 },{ timestamps: true })
 
 export const Pile= mongoose.model("Pile", PileSchema);

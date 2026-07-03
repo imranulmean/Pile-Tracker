@@ -363,9 +363,8 @@ export default function PileTracker() {
         await delKey(photoKey(id, k)); hp[k].hasPhoto = false; 
       } 
     }
-    const rec = { ...f, id, hp };
+    const rec = { ...f, id, hp,  photos};
     console.log(rec)
-    // return;
     try{
       const res= await fetch(`${BASE_API}/pile/savePile`,{
         method:"POST",
@@ -709,7 +708,7 @@ export default function PileTracker() {
           </>
         )}
         {editing && (
-          <PileModal 
+          <PileModal
             pile={editing.id ? editing : (editing.projectId ? editing : null)} 
             projects={projects} 
             defaultProject={active !== "all" ? active : undefined} 

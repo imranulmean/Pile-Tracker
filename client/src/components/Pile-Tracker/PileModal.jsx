@@ -9,7 +9,8 @@ import { FIELD_DEFAULTS, fmtN, getHp, getKey, num, photoKey, theoreticalVol } fr
 
 /* ───────────────────────── photo + hold point ───────────────────────── */
 function PhotoBox({ data, onPick, onRemove, label }) {
-  
+
+    const BASE_API= import.meta.env.VITE_API_BASE_URL
     const [busy, setBusy] = useState(false);
 
     function fileToDataUrl(file, maxDim = 1280, quality = 0.7) {
@@ -54,12 +55,15 @@ function PhotoBox({ data, onPick, onRemove, label }) {
       setBusy(false); 
       e.target.value = ""; 
     };
+    const imageSrc = data?.startsWith("data:image") ? data : `${BASE_API}${data}`;
+    
     if (data) return (
       <div className="pt-photo">
-        <img src={data} alt={label} />
+        <img src={`${imageSrc}`} alt={label} />
         <button className="pt-photo-x" onClick={onRemove} type="button"><X size={13} /></button>
       </div>
     );
+
     return (
       <label className="pt-photo-add">
         <input type="file" accept="image/*" capture="environment" onChange={handle} style={{ display: "none" }} />
@@ -69,7 +73,8 @@ function PhotoBox({ data, onPick, onRemove, label }) {
         {busy ? "Adding…" : "Add photo"}
       </label>
     );
-  }
+}
+
   function HoldPoint({ title, sub, hp, photo, onChange, onPhoto, onPhotoRemove }) {
     return (
       <div className={"pt-hp" + (hp.released ? " is-released" : "")}>
@@ -93,22 +98,23 @@ function PhotoBox({ data, onPick, onRemove, label }) {
 export default function PileModal({ pile, projects, defaultProject, onSave, onDelete, onPrint, onClose }) {
     console.log(pile)
     const [f, setF] = useState(() => ({ ...FIELD_DEFAULTS, projectId: defaultProject || projects[0]?.id || "", ...pile, hp: getHp(pile || {}) }));
-    const [photos, setPhotos] = useState({ drill: null, cage: null, pour: null });
+    // const [photos, setPhotos] = useState({ drill: null, cage: null, pour: null });
+    const [photos, setPhotos] = useState(pile.photos);
     const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
     const setHp = (which) => (val) => setF((p) => ({ ...p, hp: { ...p.hp, [which]: val } }));
     const isNew = !pile?.id, theo = theoreticalVol(f); 
 
 
-    useEffect(() => {
-      let alive = true;
-      (async () => { if (pile?.id) { 
-        const dr = await getKey(photoKey(pile.id, "drill")); 
-        const c = await getKey(photoKey(pile.id, "cage")); 
-        const po = await getKey(photoKey(pile.id, "pour")); 
-        if (alive) 
-          setPhotos({ drill: dr || null, cage: c || null, pour: po || null }); } })();
-      return () => { alive = false; };
-    }, [pile?.id]);
+    // useEffect(() => {
+    //   let alive = true;
+    //   (async () => { if (pile?.id) { 
+    //     const dr = await getKey(photoKey(pile.id, "drill")); 
+    //     const c = await getKey(photoKey(pile.id, "cage")); 
+    //     const po = await getKey(photoKey(pile.id, "pour")); 
+    //     if (alive) 
+    //       setPhotos({ drill: dr || null, cage: c || null, pour: po || null }); } })();
+    //   return () => { alive = false; };
+    // }, [pile?.id]);
     return (
       <div className="pt-overlay" onMouseDown={onClose}>
         <div className="pt-modal" onMouseDown={(e) => e.stopPropagation()}>
