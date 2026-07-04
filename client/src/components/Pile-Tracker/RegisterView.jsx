@@ -32,6 +32,7 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
           let status = "missing", detail = [];
           if (r.cancelled && !t) 
             return { reg: r, trk: null, status: "cancelled", detail: "" };
+
           if (t) {  
             if (r.cancelled) 
               detail.push("cancelled in register");
@@ -50,6 +51,7 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
           }
           return { reg: r, trk: t, status, detail: detail.join(", ") };
         });
+
         const extra = trk.filter((p) => !seen.has(p.projectId + "|" + norm(p.pileRef))).map((p) => ({ 
             trk: p, status: "unregistered", detail: "" 
         }));
@@ -202,7 +204,7 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
                     <span className="pt-muted">—</span>
                   )}
                 </div>
-
+                    {/* Showing Matched */}
                 <div>
                   <span className="pt-recon-badge" style={{ background: st.color + "1e", color: st.color }}>
                     {st.label}

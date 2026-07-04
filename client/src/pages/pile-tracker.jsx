@@ -291,7 +291,6 @@ export default function PileTracker() {
       const res= await fetch(`${BASE_API}/project/getProjects`);
       const data= await res.json();
       // setProjects((await getKey(PROJECTS_KEY)) || []);
-      console.log(data.message)
       setProjects(data.message); 
       // setPiles((await getKey(PILES_KEY)) || []); 
       // setRegister((await getKey(REGISTER_KEY)) || []); 
@@ -304,17 +303,25 @@ export default function PileTracker() {
 
   useEffect(() => {
     if (!printData) return;
-    const done = () => { window.removeEventListener("afterprint", done); setPrintData(null); };
+    const done = () => { 
+      window.removeEventListener("afterprint", done); 
+      setPrintData(null); 
+    };
     window.addEventListener("afterprint", done);
     const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
     return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
   }, [printData]);
 
   const openItp = async (list) => {
+    console.log(list)
     if (!list || !list.length) return;
     const photoMap = {};
     for (const p of list) {
-      photoMap[p.id || "tmp"] = { drill: await getKey(photoKey(p.id, "drill")), cage: await getKey(photoKey(p.id, "cage")), pour: await getKey(photoKey(p.id, "pour")) };
+      photoMap[p.id || "tmp"] = { 
+        drill: await getKey(photoKey(p.id, "drill")) || p.photos.drill, 
+        cage: await getKey(photoKey(p.id, "cage")) || p.photos.cage, 
+        pour: await getKey(photoKey(p.id, "pour")) || p.photos.pour 
+      };
     }
     setPrintData({ mode: "full", piles: list, photos: photoMap });
   };
@@ -383,11 +390,23 @@ export default function PileTracker() {
   };
 
   const deletePile = async (id) => { 
-    await delKey(photoKey(id, "drill")); 
-    await delKey(photoKey(id, "cage")); 
-    await delKey(photoKey(id, "pour")); 
-    persistPiles(piles.filter((x) => x.id !== id)); 
-    setEditing(null); 
+    try {
+      const res= await fetch(`${BASE_API}/pile/deletePile/${id}`,{
+          method:"DELETE"
+      });
+      const data= await res.json();
+      if(!data.success){
+          alert(data.message);
+          return;
+      }
+      await delKey(photoKey(id, "drill")); 
+      await delKey(photoKey(id, "cage")); 
+      await delKey(photoKey(id, "pour")); 
+      persistPiles(piles.filter((x) => x.id !== id)); 
+      setEditing(null);
+    } catch (error) {
+        alert(error)
+    }     
   };
 
   const saveProject = async(f) => { 
@@ -452,10 +471,27 @@ export default function PileTracker() {
 
   const deleteReg = (id) => { persistRegister(register.filter((x) => x.id !== id)); setEditingReg(null); };
   
-  const doImport = (projectId, rows) => { 
-    console.log(rows)
-    persistRegister([...register, ...rows.map((r) => ({ ...r, id: uid(), projectId }))]); 
-    setShowImport(false); 
+  const doImport = async(projectId, rows) => {     
+    const bulkImport=rows.map((r) => ({ ...r, id: uid(), projectId }));
+    console.log(bulkImport)
+    try{
+      const res= await fetch(`${BASE_API}/register/bulkImport`,{
+        method:"POST",
+        headers:{
+          'content-type' : 'application/json'
+        },
+        body:JSON.stringify(bulkImport)
+      })
+      const data= await res.json();
+      if(!data.success){
+        alert(data.message);
+        return;
+      }
+      persistRegister([...register, ...rows.map((r) => ({ ...r, id: uid(), projectId }))]);
+      setShowImport(false); 
+    }catch(err){
+      alert(err);
+    }
   };
   
   const logFromRegister = (reg) =>
@@ -561,7 +597,6 @@ export default function PileTracker() {
     try{
       const res= await fetch(`${BASE_API}/register/loadRegister/${projectId}`);
       const data = await res.json();
-      console.log(data)
       setRegister(data.register);
       setPiles(data.piles)
       setActive(projectId)
@@ -753,12 +788,19 @@ export default function PileTracker() {
       {
         printData && (          
           <div className="pt-print">
-            <p>{JSON.stringify(printData)}</p>
             {               
               printData.mode === "checklist" ? 
               <ChecklistReport piles={printData.piles} project={printData.project} projects={projects} /> 
               : 
-              printData.piles.map((p) => <ItpReport key={p.id || "tmp"} pile={p} project={projects.find((x) => x.id === p.projectId)} photos={printData.photos[p.id || "tmp"]} />)}
+              printData.piles.map((p) => 
+                <ItpReport 
+                  key={p.id || "tmp"} 
+                  pile={p} 
+                  project={projects.find((x) => x.id === p.projectId)} 
+                  photos={printData.photos[p.id || "tmp"]}
+                  printData = {printData} 
+                />)
+            }
           </div>
         )
       }
@@ -855,7 +897,7 @@ const CSS = `
 .pt-spinner{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--steel);border-radius:50%;animation:pt-spin .8s linear infinite;}
 .pt-spinner-sm{width:14px;height:14px;border-width:2px;}
 @keyframes pt-spin{to{transform:rotate(360deg);}}
-.pt-overlay{position:fixed;inset:0;background:#0c121bbb;backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;z-index:50;overflow-y:auto;}
+.pt-overlay{position:fixed;inset:0;background:#0c121bbb;backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;z-index:50;}
 .pt-modal{background:var(--surface);border-radius:16px;width:100%;max-width:700px;box-shadow:0 24px 60px #0008;overflow:hidden;animation:pt-pop .15s ease;}
 .pt-modal-sm{max-width:480px;}
 @keyframes pt-pop{from{transform:translateY(8px);opacity:0;}}

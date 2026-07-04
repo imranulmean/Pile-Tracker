@@ -1,8 +1,9 @@
 import express from 'express';
-import { savePile } from '../controllers/pile.controller.js';
+import { deletePile, savePile } from '../controllers/pile.controller.js';
 
 const router = express.Router();
 
 router.post('/savePile',savePile)
+router.delete("/deletePile/:id", deletePile);
 
 export default router;

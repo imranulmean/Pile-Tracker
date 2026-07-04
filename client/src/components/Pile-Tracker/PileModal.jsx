@@ -56,11 +56,11 @@ function PhotoBox({ data, onPick, onRemove, label }) {
       e.target.value = ""; 
     };
     const imageSrc = data?.startsWith("data:image") ? data : `${BASE_API}${data}`;
-    
+
     if (data) return (
       <div className="pt-photo">
         <img src={`${imageSrc}`} alt={label} />
-        <button className="pt-photo-x" onClick={onRemove} type="button"><X size={13} /></button>
+        <button type="button" className="pt-photo-x" onClick={onRemove} ><X size={13} /></button>
       </div>
     );
 
@@ -96,10 +96,9 @@ function PhotoBox({ data, onPick, onRemove, label }) {
 
   
 export default function PileModal({ pile, projects, defaultProject, onSave, onDelete, onPrint, onClose }) {
-    console.log(pile)
     const [f, setF] = useState(() => ({ ...FIELD_DEFAULTS, projectId: defaultProject || projects[0]?.id || "", ...pile, hp: getHp(pile || {}) }));
     // const [photos, setPhotos] = useState({ drill: null, cage: null, pour: null });
-    const [photos, setPhotos] = useState(pile.photos);
+    const [photos, setPhotos] = useState(pile.photos || { drill: null, cage: null, pour: null });
     const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
     const setHp = (which) => (val) => setF((p) => ({ ...p, hp: { ...p.hp, [which]: val } }));
     const isNew = !pile?.id, theo = theoreticalVol(f); 
@@ -124,7 +123,7 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                 {isNew ? "New pile" : "Edit pile"}
               </div>
               <div className="pt-modal-title">Pile {f.pileRef || "—"}</div></div>
-              <button className="pt-iconbtn" onClick={onClose}><X size={18} /></button>
+              <button type="button" className="pt-iconbtn" onClick={onClose}><X size={18} /></button>
             </div>
           <div className="pt-modal-body">
             <section className="pt-fset">
@@ -202,21 +201,21 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
           </div>
             <div className="pt-modal-foot">
                 {!isNew && (
-                    <button className="pt-btn pt-btn-danger" onClick={() => onDelete(f.id)}>
+                    <button type="button" className="pt-btn pt-btn-danger" onClick={() => onDelete(f.id)}>
                     <Trash2 size={15} /> Delete
                     </button>
                 )}
             
                 <div className="pt-foot-right">
-                    <button className="pt-btn pt-btn-ghost" onClick={() => onPrint(f, photos)}>
+                    <button type="button" className="pt-btn pt-btn-ghost" onClick={() => onPrint(f, photos)}>
                         <Printer size={15} /> Print ITP
                     </button>
                     
-                    <button className="pt-btn pt-btn-ghost" onClick={onClose}>
+                    <button type="button" className="pt-btn pt-btn-ghost" onClick={onClose}>
                         Cancel
                     </button>
                     
-                    <button 
+                    <button type="button"
                         className="pt-btn pt-btn-primary" 
                         onClick={() => onSave(f, photos)} 
                         disabled={!String(f.pileRef).trim() || !f.projectId}

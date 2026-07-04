@@ -25,7 +25,7 @@ async function savePhoto(photo, pileId, type) {
 
     await fs.mkdir(PHOTO_DIR, { recursive: true });
 
-    const filename = `${pileId}_${type}_${randomUUID()}.${ext}`;
+    const filename = `${pileId}_${type}.${ext}`;
 
     const filepath = path.join(PHOTO_DIR, filename);
 
@@ -70,6 +70,30 @@ export const savePile = async(req, res)=>{
 }
 
 
+export const deletePile = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const pile = await Pile.findOneAndDelete({ id });
+
+        if (!pile) {
+            return res.json({
+                success: false,
+                message: "Pile not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Pile deleted successfully."
+        });
+    } catch (err) {
+        res.json({
+            success: false,
+            message: err.message
+        });
+    }
+};
 
 // export const loadRegister = async(req, res)=>{
 //     const register = await Register.find({ projectId: req.params.projectId });
