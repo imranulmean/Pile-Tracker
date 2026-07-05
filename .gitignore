@@ -18,6 +18,7 @@ localFolder
 backups
 InfluxDB
 telegraf
+.bat
 
 # Editor directories and files
 .vscode/*
@@ -30,4 +31,3 @@ telegraf
 *.sln
 *.sw?
 .env
-.bat
