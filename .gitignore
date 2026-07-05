@@ -30,3 +30,4 @@ telegraf
 *.sln
 *.sw?
 .env
+.bat
