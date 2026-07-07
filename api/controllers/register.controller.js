@@ -3,14 +3,14 @@ import { Pile, Register } from "../models/pile.model.js";
 export const saveReg = async(req, res)=>{
     const{_id, __v, ...rest} = req.body;
     const register = await Register.findOneAndUpdate(
-                        { id: req.body.id },
+                        { projectId: rest.projectId, pileRef: rest.pileRef },
                         { $set: rest },
                         { new: true, upsert: true }
                     );
     
     const registerId = req.body.id;                         
     const pile = await Pile.findOneAndUpdate(
-        { registerId },
+        { projectId: rest.projectId, pileRef: rest.pileRef },
         { 
             $set: {
                 ...rest,

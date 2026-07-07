@@ -8,7 +8,9 @@ import {
 export default function ImportModal({ projects, defaultProject, onImport, onClose }) {
     const [projectId, setProjectId] = useState(defaultProject || projects[0]?.id || "");
     const [text, setText] = useState("");
+
     const parsed = useMemo(() => {
+
       return text.split(/\r?\n/).map((l) => l.replace(/\s+$/, "")).filter((l) => l.trim()).map((line) => {
         const c = line.split(/\t|,/).map((x) => x.trim());
         if (c.length >= 9) return { 
@@ -18,6 +20,7 @@ export default function ImportModal({ projects, defaultProject, onImport, onClos
         return { pileRef: c[0] || "", dia: c[1] || "", grade: c[2] || "", verticalReo: c[3] || "", verticalReoLower: "", ligs: c[4] || "", socket: c[5] || "", cutoffRL: c[6] || "", topSteelRL: c[7] || "" };
       }).filter((r) => r.pileRef && /\d/.test(r.pileRef) && !/^(pile|number|no\b)/i.test(r.pileRef));
     }, [text]);
+
     return (
       <div className="pt-overlay" onMouseDown={onClose}><div className="pt-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="pt-modal-head">

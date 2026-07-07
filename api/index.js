@@ -9,6 +9,8 @@ import mongoose from 'mongoose';
 import projectRoutes from './routes/project.route.js';
 import registerRoutes from './routes/register.route.js';
 import pileRoutes from './routes/pile.routes.js';
+import administrationRoutes from './routes/administration.route.js';
+import { verifyToken } from './middleware/verifyToken.js';
 
 
 dotenv.config();
@@ -46,6 +48,7 @@ app.get('/test', (req, res)=>{
 app.use('/project', projectRoutes);
 app.use('/register', registerRoutes);
 app.use('/pile', pileRoutes);
+app.use('/administration', administrationRoutes);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

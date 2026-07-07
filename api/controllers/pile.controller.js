@@ -35,48 +35,88 @@ async function savePhoto(photo, pileId, type) {
     return `/uploads/pile-photos/${filename}`;
 }
 
-export const savePile = async(req, res)=>{
-    const{_id, __v, ...rest} = req.body;
-    // console.log(rest);
-    if (rest.photos) {
-        const photos = { ...rest.photos };
+// export const savePile = async(req, res)=>{
+//     const{_id, __v, ...rest} = req.body;
+//     // console.log(rest);
+//     if (rest.photos) {
+//         const photos = { ...rest.photos };
 
-        for (const type of ["drill", "cage", "pour"]) {
-            if (photos[type]) {
-                photos[type] = await savePhoto( photos[type], rest.id, type );
-            }
+//         for (const type of ["drill", "cage", "pour"]) {
+//             if (photos[type]) {
+//                 photos[type] = await savePhoto( photos[type], rest.id, type );
+//             }
+//         }
+
+//         rest.photos = photos;
+//     }
+
+//     try {
+//         const pile = await Pile.findOneAndUpdate(
+//                             { id: req.body.id },
+//                             { $set: rest },
+//                             { new: true, upsert: true }
+//                         );
+                    
+//         const register = await Register.findOneAndUpdate(
+//             { id: req.body.registerId },
+//             { $set: rest },
+//             { new: true, upsert: true }
+//         );                         
+//         res.json({success: true, message: "Pile Saved", register, pile});          
+//     } catch (err) {
+//         res.json({success: false, message: err.message });
+//     }
+     
+// }
+
+export const savePile = async (req, res) => {
+    const { _id, __v, ...rest } = req.body;
+
+    const setData = { ...rest };
+
+    if (rest.hp) {
+        for (const key of Object.keys(rest.hp)) {
+            setData[`hp.${key}`] = rest.hp[key];
         }
+        delete setData.hp;   // remove the whole-object version to avoid path conflict
+    }
 
-        rest.photos = photos;
+    if (rest.photos) {
+        for (const type of Object.keys(rest.photos)) {
+            if (rest.photos[type]) {
+                rest.photos[type] = await savePhoto(rest.photos[type], rest.id, type);
+            }
+            setData[`photos.${type}`] = rest.photos[type];
+        }
+        delete setData.photos;   // same here
     }
 
     try {
         const pile = await Pile.findOneAndUpdate(
-                            { id: req.body.id },
-                            { $set: rest },
-                            { new: true, upsert: true }
-                        );
-                    
-        const register = await Register.findOneAndUpdate(
-            { id: req.body.registerId },
-            { $set: rest },
-            { new: true }
-        );                         
-        res.json({success: true, message: "Pile Saved", register, pile});          
-    } catch (err) {
-        res.json({success: false, message: err.message });
-    }
-     
-}
+            { projectId: rest.projectId, pileRef: rest.pileRef },
+            { $set: setData },
+            { new: true, upsert: true }
+        );
 
+        const register = await Register.findOneAndUpdate(
+            { projectId: rest.projectId, pileRef: rest.pileRef },
+            { $set: rest },
+            { new: true, upsert: true }
+        );
+
+        res.json({ success: true, message: "Pile Saved", register, pile });
+    } catch (err) {
+        res.json({ success: false, message: err.message });
+    }
+};
 
 export const deletePile = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { projectId, pileRef } = req.params;
+        const register = await Register.findOneAndDelete({ projectId, pileRef });
+        const pile = await Pile.findOneAndDelete({ projectId, pileRef });
 
-        const pile = await Pile.findOneAndDelete({ id });
-
-        if (!pile) {
+        if (!register || !pile) {
             return res.json({
                 success: false,
                 message: "Pile not found."

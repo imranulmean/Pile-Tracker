@@ -98,7 +98,7 @@ function PhotoBox({ data, onPick, onRemove, label }) {
 export default function PileModal({ pile, projects, defaultProject, onSave, onDelete, onPrint, onClose }) {
     const [f, setF] = useState(() => ({ ...FIELD_DEFAULTS, projectId: defaultProject || projects[0]?.id || "", ...pile, hp: getHp(pile || {}) }));
     // const [photos, setPhotos] = useState({ drill: null, cage: null, pour: null });
-    const [photos, setPhotos] = useState(pile.photos || { drill: null, cage: null, pour: null });
+    const [photos, setPhotos] = useState(pile?.photos || { drill: null, cage: null, pour: null });
     const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
     const setHp = (which) => (val) => setF((p) => ({ ...p, hp: { ...p.hp, [which]: val } }));
     const isNew = !pile?.id, theo = theoreticalVol(f); 
@@ -139,8 +139,15 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                 <label className="pt-field"><span>Ligs</span><input value={f.ligs} onChange={set("ligs")} placeholder="N12-200" /></label>
                 <label className="pt-field"><span>Socket (m)</span><input inputMode="decimal" value={f.socket} onChange={set("socket")} placeholder="5.45" /></label>
                 <label className="pt-field"><span>Cut-off RL</span><input inputMode="decimal" value={f.cutoffRL} onChange={set("cutoffRL")} placeholder="74.775" /></label>
-                <label className="pt-field"><span>Top of steel RL</span><input inputMode="decimal" value={f.topSteelRL} onChange={set("topSteelRL")} placeholder="75.915" /></label>
+                <label className="pt-field"><span>Top of steel RL</span><input inputMode="decimal" value={f.topSteelRL} onChange={set("topSteelRL")} placeholder="75.915" /></label>               
               </div>
+              <button type="button"
+                      className="pt-btn pt-btn-primary mt-2" 
+                      onClick={() => onSave(f, photos, 'register')} 
+                      disabled={!String(f.pileRef).trim() || !f.projectId}
+                      >
+                      Save Reg
+              </button>               
             </section>
             <section className="pt-fset">
               <div className="pt-fset-label">Drilling — actual</div>
@@ -160,6 +167,13 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                   setPhotos((p) => ({ ...p, drill: d }))
                 }} 
                 onPhotoRemove={() => setPhotos((p) => ({ ...p, drill: null }))} />
+              <button type="button"
+                      className="pt-btn pt-btn-primary mt-2" 
+                      onClick={() => onSave(f, photos, 'drill')} 
+                      disabled={!String(f.pileRef).trim() || !f.projectId}
+                      >
+                      Save drill
+              </button>                 
             </section>
             <section className="pt-fset">
               <div className="pt-fset-label">Reo cage</div>
@@ -172,6 +186,13 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                 onChange={setHp("cage")} 
                 onPhoto={(d) => setPhotos((p) => ({ ...p, cage: d }))} 
                 onPhotoRemove={() => setPhotos((p) => ({ ...p, cage: null }))} />
+              <button type="button"
+                      className="pt-btn pt-btn-primary mt-2" 
+                      onClick={() => onSave(f, photos, 'cage')} 
+                      disabled={!String(f.pileRef).trim() || !f.projectId}
+                      >
+                      Save cage
+              </button>                 
             </section>
             <section className="pt-fset">
               <div className="pt-fset-label">Pour</div>
@@ -189,6 +210,13 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                 onChange={setHp("pour")} 
                 onPhoto={(d) => setPhotos((p) => ({ ...p, pour: d }))} 
                 onPhotoRemove={() => setPhotos((p) => ({ ...p, pour: null }))} />
+                <button type="button"
+                        className="pt-btn pt-btn-primary mt-2" 
+                        onClick={() => onSave(f, photos, 'pour')} 
+                        disabled={!String(f.pileRef).trim() || !f.projectId}
+                        >
+                        Save pour
+                </button>                
             </section>
             <section className="pt-fset">
               <div className="pt-fset-label">QA sign-off</div>
@@ -197,11 +225,18 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                 <label className="pt-field pt-col2"><span>Inspector</span><input value={f.qaInspector} onChange={set("qaInspector")} placeholder="Name" /></label>
                 <label className="pt-field pt-col3"><span>Notes</span><textarea rows={2} value={f.qaNotes} onChange={set("qaNotes")} placeholder="Observations, hold points, NCRs…" /></label>
               </div>
+                <button type="button"
+                        className="pt-btn pt-btn-primary mt-2" 
+                        onClick={() => onSave(f, photos, 'qa')} 
+                        disabled={!String(f.pileRef).trim() || !f.projectId}
+                        >
+                        Save qa
+                </button>               
             </section>
           </div>
             <div className="pt-modal-foot">
                 {!isNew && (
-                    <button type="button" className="pt-btn pt-btn-danger" onClick={() => onDelete(f.id)}>
+                    <button type="button" className="pt-btn pt-btn-danger" onClick={() => onDelete(f.projectId, f.pileRef)}>
                     <Trash2 size={15} /> Delete
                     </button>
                 )}
@@ -220,7 +255,7 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
                         onClick={() => onSave(f, photos)} 
                         disabled={!String(f.pileRef).trim() || !f.projectId}
                         >
-                        {isNew ? "Add pile" : "Save changes"}
+                        {isNew ? "Add pile" : "Save Full changes"}
                     </button>
                 </div>
             </div>          
