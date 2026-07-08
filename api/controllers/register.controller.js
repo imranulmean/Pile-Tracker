@@ -3,14 +3,14 @@ import { Pile, Register } from "../models/pile.model.js";
 export const saveReg = async(req, res)=>{
     const{_id, __v, ...rest} = req.body;
     const register = await Register.findOneAndUpdate(
-                        { projectId: rest.projectId, pileRef: rest.pileRef },
+                        { id: rest.id },
                         { $set: rest },
                         { new: true, upsert: true }
                     );
     
     const registerId = req.body.id;                         
     const pile = await Pile.findOneAndUpdate(
-        { projectId: rest.projectId, pileRef: rest.pileRef },
+        { registerId },
         { 
             $set: {
                 ...rest,
@@ -53,4 +53,29 @@ export const loadRegister = async(req, res)=>{
     const piles = await Pile.find({ projectId: req.params.projectId });
     res.json({success: true, register, piles});       
 }
+
+export const deleteReg = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const register = await Register.findOneAndDelete({ id });
+        const pile = await Pile.findOneAndDelete({ id });
+
+        if (!register) {
+            return res.json({
+                success: false,
+                message: "Register not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Register deleted successfully."
+        });
+    } catch (err) {
+        res.json({
+            success: false,
+            message: err.message
+        });
+    }
+};
 
