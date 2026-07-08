@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
+
+    compileSdkVersion compileSdkVersion
     namespace = "com.piletracker.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
