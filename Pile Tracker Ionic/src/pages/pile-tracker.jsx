@@ -4,7 +4,8 @@ import {
   Plus, Search, Download, X, Trash2, Pencil, FolderPlus, AlertTriangle,
   CheckCircle2, HardHat, Building2, MoreHorizontal, Info, Camera, Upload,
   ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer,
-  DownloadIcon
+  DownloadIcon,
+  UploadIcon
 } from "lucide-react";
 import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
@@ -32,6 +33,7 @@ const LOGO_URI = LOGO_URI_JS;
 const PROJECTS_KEY = "piletracker:projects";
 const PILES_KEY = "piletracker:piles";
 const REGISTER_KEY = "piletracker:register";
+const SYNC_QUEUE = "piletracker:syncQueue";
 const SHARED = true;
 const hasStore = typeof window !== "undefined" && window.storage;
 const photoKey = (pileId, hp) => `piletracker:photo:${pileId}:${hp}`;
@@ -386,9 +388,11 @@ const downloadAllInfo = async () => {
     for (const k of ["drill", "cage", "pour"]) { 
       const data = photos[k]; 
       if (data) { 
-        await setKey(photoKey(id, k), data); hp[k].hasPhoto = true; 
+        await setKey(photoKey(id, k), data); 
+        hp[k].hasPhoto = true; 
       } else { 
-        await delKey(photoKey(id, k)); hp[k].hasPhoto = false; 
+        await delKey(photoKey(id, k)); 
+        hp[k].hasPhoto = false; 
       } 
     }
     const rec = { ...f, id, hp,  photos};
@@ -473,22 +477,22 @@ const downloadAllInfo = async () => {
       default:
         payload = rec;
     }    
-    console.log(payload)    
-    // return;
-    try{
-      const res= await fetch(`${BASE_API}/pile/savePile`,{
-        method:"POST",
-        headers:{
-          'content-type' : 'application/json'
-        },
-        body:JSON.stringify(payload)
-      })
-      const data= await res.json();
-      console.log(data);
-    }catch(err){
-      alert(err);
-    }
+    console.log(rec)
     persistPiles(exists ? piles.map((x) => (x.id === id ? rec : x)) : [...piles, rec]); 
+    // Save to sync queue
+    const queue = (await getKey(SYNC_QUEUE)) || [];
+    // Remove any previous pending update for the same section
+    const filtered = queue.filter(
+        x => !( x.projectId === payload.projectId && x.pileRef === payload.pileRef && x.section === section)
+    );    
+    filtered.push({
+      projectId: payload.projectId,
+      pileRef: payload.pileRef,
+      section,
+      payload,
+      updatedAt: Date.now()
+    });
+    await setKey(SYNC_QUEUE, filtered);
     setEditing(null);
   };
 
@@ -598,7 +602,41 @@ const downloadAllInfo = async () => {
     }
 
   };
-  
+
+  const syncOfflineChanges= async()=>{
+    const syncQueue = await getKey(SYNC_QUEUE) || [];
+    console.log(syncQueue.length)
+    if(syncQueue.length<1){
+      alert("No Change Pending")
+      return;
+    }
+    try {
+      for (const item of syncQueue) {
+        const res= await fetch(`${BASE_API}/pile/savePile`,{
+          method:"POST",
+          headers:{
+            'content-type' : 'application/json'
+          },
+          body:JSON.stringify(item.payload)
+        })
+      }
+      for (const item of syncQueue) {
+        try{
+          for (const k of ["drill", "cage", "pour"]) { 
+            await delKey(photoKey(item.id, k)); 
+          }        
+        }catch(err){
+          alert(err);
+        }
+      }    
+      await delKey(SYNC_QUEUE);    
+      await downloadAllInfo();
+      alert("Synced Successfull")
+    } catch (error) {
+      alert(error)
+    }
+
+  }
   const doImport = async(projectId, rows) => {     
     const bulkImport=rows.map((r) => ({ ...r, id: uid(), projectId }));
     console.log(bulkImport)
@@ -720,7 +758,7 @@ const downloadAllInfo = async () => {
 
   const regCount = register.filter((r) => active === "all" || r.projectId === active).length;
   const visShown = visible.slice(0, RENDER_CAP);
-  
+
   const loadRegister = async (projectId) => {
     try {
       const register = (await getKey(REGISTER_KEY)) || [];
@@ -766,7 +804,14 @@ const downloadAllInfo = async () => {
               </button>
               <button className="pt-btn pt-btn-primary" onClick={() => downloadAllInfo()}>
                 <DownloadIcon size={16} /> Download
+              </button> 
+              <button className="pt-btn pt-btn-primary" onClick={() => clearStorage()}>
+                <DownloadIcon size={16} /> Clear
+              </button>
+              <button className="pt-btn pt-btn-ghost" onClick={() => syncOfflineChanges()}>
+                <UploadIcon size={16} /> Sync
               </button>              
+
               <Link to="/login" className="pt-btn pt-btn-primary">
                 <Plus size={16} /> Login
               </Link> 
