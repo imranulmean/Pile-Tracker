@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import {Link} from 'react-router-dom'
 import {
   Plus, Search, Download, X, Trash2, Pencil, FolderPlus, AlertTriangle,
   CheckCircle2, HardHat, Building2, MoreHorizontal, Info, Camera, Upload,
-  ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer
+  ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer,
+  DownloadIcon
 } from "lucide-react";
 import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
@@ -11,6 +13,13 @@ import { ItpReport } from "../components/Pile-Tracker/ItpReport";
 import ImportModal from "../components/Pile-Tracker/ImportModal";
 import ProjectModal from "../components/Pile-Tracker/ProjectModal";
 import RegisterEntryModal from "../components/Pile-Tracker/RegisterEntryModal";
+
+import localforage from "localforage";
+
+localforage.config({
+    name: "PileTracker",
+    storeName: "piletracker"
+});
 
 /* schedule seeded from "Pile Schedule Rev 26 — 19 May 26" (1300 piles)
    columns: [no, dia, grade, verticalReo, ligs, socket, cutoffRL, topSteelRL, cancelled?] */
@@ -27,32 +36,22 @@ const SHARED = true;
 const hasStore = typeof window !== "undefined" && window.storage;
 const photoKey = (pileId, hp) => `piletracker:photo:${pileId}:${hp}`;
 
-async function getKey(key) {
-  if (!hasStore) return null;
-  try { 
-    const r = await window.storage.get(key, SHARED); 
-    return r ? JSON.parse(r.value) : null; 
-  }
-  catch (e) { return null; }
+export const getKey = async (key) => {
+    return await localforage.getItem(key);
+};
+
+export const setKey = async (key, value) => {
+    await localforage.setItem(key, value);
+    return true;
 }
 
-async function setKey(key, val) {
-  if (!hasStore) return true;
-  try { 
-    const r = await window.storage.set(key, JSON.stringify(val), SHARED); 
-    return !!r; 
-  }
-  catch (e) { return false; }
-}
+export const delKey = async (key) => {
+    await localforage.removeItem(key);
+};
 
-async function delKey(key) { 
-  if (!hasStore) return; 
-  try { 
-    await window.storage.delete(key, SHARED); 
-  } 
-  catch (e) {} 
-}
-
+export const clearStorage = async () => {
+    await localforage.clear();
+};
 /* ───────────────────────── domain ───────────────────────── */
 const STAGES = [
   { key: "not_started", label: "Not started", short: "Pending", color: "#94A0AE" },
@@ -286,14 +285,36 @@ export default function PileTracker() {
   }, []);
 
 
+const downloadAllInfo = async () => {
+  try {
+
+      const projectRes = await fetch(`${BASE_API}/project/getProjects`);
+      const projectData = await projectRes.json();
+
+      const registerRes = await fetch(`${BASE_API}/register/loadRegister/all`);
+      const registerData = await registerRes.json();
+
+      if (!projectData.success || !registerData.success) {
+          alert("Download failed");
+          return;
+      }
+
+      await persistProjects(projectData.message);
+      await persistRegister(registerData.register);
+      await persistPiles(registerData.piles);
+
+      alert("Download completed.");
+
+  } catch (err) {
+      alert(err.message);
+  }
+};
+
   const getProjects= async()=>{
     try{
-      const res= await fetch(`${BASE_API}/project/getProjects`);
-      const data= await res.json();
-      // setProjects((await getKey(PROJECTS_KEY)) || []);
-      setProjects(data.message); 
-      // setPiles((await getKey(PILES_KEY)) || []); 
-      // setRegister((await getKey(REGISTER_KEY)) || []); 
+      setProjects((await getKey(PROJECTS_KEY)) || []);
+      setPiles((await getKey(PILES_KEY)) || []); 
+      setRegister((await getKey(REGISTER_KEY)) || []); 
       setLoading(false);       
     }catch(err){
       alert(err);
@@ -699,19 +720,26 @@ export default function PileTracker() {
 
   const regCount = register.filter((r) => active === "all" || r.projectId === active).length;
   const visShown = visible.slice(0, RENDER_CAP);
+  
+  const loadRegister = async (projectId) => {
+    try {
+      const register = (await getKey(REGISTER_KEY)) || [];
+      const piles = (await getKey(PILES_KEY)) || [];
 
-  const loadRegister= async(projectId)=>{
-    // return;
-    try{
-      const res= await fetch(`${BASE_API}/register/loadRegister/${projectId}`);
-      const data = await res.json();
-      setRegister(data.register);
-      setPiles(data.piles)
-      setActive(projectId)
-    }catch(err){
-      alert(err);
+      if (projectId === "all") {
+        setRegister(register);
+        setPiles(piles);
+      } else {
+        setRegister(register.filter(r => r.projectId === projectId));
+        setPiles(piles.filter(p => p.projectId === projectId));
+      }
+
+      setActive(projectId);
+
+    } catch (err) {
+      alert(err.message);
     }
-  }
+  };
 
   return (
     <div className="pt-app">
@@ -736,6 +764,13 @@ export default function PileTracker() {
               <button className="pt-btn pt-btn-primary" onClick={() => setEditing({})} disabled={!projects.length}>
                 <Plus size={16} /> Add pile
               </button>
+              <button className="pt-btn pt-btn-primary" onClick={() => downloadAllInfo()}>
+                <DownloadIcon size={16} /> Download
+              </button>              
+              <Link to="/login" className="pt-btn pt-btn-primary">
+                <Plus size={16} /> Login
+              </Link> 
+                           
             </>
             )
               : 

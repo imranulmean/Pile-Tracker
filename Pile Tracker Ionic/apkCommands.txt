@@ -1,7 +1,39 @@
-npx cap init "Pile Tracker Ionic" "com.piletracker.app" --web-dir=dist
-npx cap add android
+npx cap init "Pile Tracker App" "com.piletracker.app" --web-dir=dist
 npm run build
+npx cap add android
 npx cap sync
 npx cap open android
 
 Pile Tracker Ionic\android>gradlew assembleDebug
+
+gradle-wrapper.properties
+-------------------------------------
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+networkTimeout=60000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+-----------------------------------
+ 
+build.gradle
+----------------------------------------
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.1'
+        classpath 'com.google.gms:google-services:4.4.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+
+Notes................................
+
+when try to fetch from http from app .. i get failed try fetch so the solution is 
+capacitor.config.json --------------
+  "server": {
+    "androidScheme": "http"
+  } 
+
+in AndroidMenifest.xml add 
+android:usesCleartextTraffic="true"

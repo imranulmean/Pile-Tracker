@@ -49,8 +49,18 @@ export const bulkImport = async (req, res) => {
 };
 
 export const loadRegister = async(req, res)=>{
-    const register = await Register.find({ projectId: req.params.projectId });
-    const piles = await Pile.find({ projectId: req.params.projectId });
+
+    const { projectId } = req.params;
+    let register, piles;
+
+    if (projectId === "all") {
+        register = await Register.find({});
+        piles = await Pile.find({});
+    } else {
+        register = await Register.find({ projectId });
+        piles = await Pile.find({ projectId });
+    }     
+
     res.json({success: true, register, piles});       
 }
 

@@ -47,7 +47,7 @@ export default function Login(){
     return(
         <div className="flex flex-col w-full h-[100vh]" 
             style={{'justify-content': 'center', 'align-items': 'center', 'background':'url(/login-bg-new.jpg)', 'background-repeat': 'no-repeat', 'background-position': 'center', 'background-size': 'cover' }}>
-            <div className="w-[500px] bg-white p-10 rounded-lg">
+            <div className="w-full max-w-sm bg-white p-10 rounded-lg">
                 <div className="flex justify-center">
                     {/* <img  src="/watchdog.jpg" alt="Your Company" class="h-auto w-32" /> */}
                     <span class="text-cyan-900 self-center text-3xl text-heading font-semibold whitespace-nowrap">Pile Tracker</span>

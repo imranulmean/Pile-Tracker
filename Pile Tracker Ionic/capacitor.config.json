@@ -1,5 +1,8 @@
 {
   "appId": "com.piletracker.app",
-  "appName": "Pile Tracker Ionic",
-  "webDir": "dist"
+  "appName": "Pile Tracker App",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http"
+  }  
 }

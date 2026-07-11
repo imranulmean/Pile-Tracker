@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Pile Tracker Ionic</string>
-    <string name="title_activity_main">Pile Tracker Ionic</string>
+    <string name="app_name">Pile Tracker App</string>
+    <string name="title_activity_main">Pile Tracker App</string>
     <string name="package_name">com.piletracker.app</string>
     <string name="custom_url_scheme">com.piletracker.app</string>
 </resources>

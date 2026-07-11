@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import {Link} from 'react-router-dom'
 import {
   Plus, Search, Download, X, Trash2, Pencil, FolderPlus, AlertTriangle,
   CheckCircle2, HardHat, Building2, MoreHorizontal, Info, Camera, Upload,
-  ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer
+  ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer,
+  DownloadIcon
 } from "lucide-react";
 import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
@@ -285,6 +287,15 @@ export default function PileTracker() {
     getProjects();
   }, []);
 
+
+  const downloadAllInfo= async()=>{
+    try{
+      await fetch(`${BASE_API}/project/getProjects`);
+      await fetch(`${BASE_API}/register/loadRegister/all`);
+    }catch(err){
+      alert(err);
+    }
+  }
 
   const getProjects= async()=>{
     try{
@@ -736,6 +747,13 @@ export default function PileTracker() {
               <button className="pt-btn pt-btn-primary" onClick={() => setEditing({})} disabled={!projects.length}>
                 <Plus size={16} /> Add pile
               </button>
+              <button className="pt-btn pt-btn-primary" onClick={() => downloadAllInfo()}>
+                <DownloadIcon size={16} /> Download
+              </button>              
+              <Link to="/login" className="pt-btn pt-btn-primary">
+                <Plus size={16} /> Login
+              </Link> 
+                           
             </>
             )
               : 
