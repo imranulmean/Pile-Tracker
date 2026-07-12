@@ -1,14 +1,29 @@
 import { Button, Checkbox, Label, TextInput } from "flowbite-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CreateUser(){
 
     const [username, setUsername]=useState('');
     const [password, setPassword]=useState('');
     const [loading, setLoading]= useState(false);
-    const [roles, setRoles]=useState({admin:'admin', supervisor:'supervisor', scheduler: 'scheduler'})
+    const [roles, setRoles]=useState([]);
     const [role, setRole]= useState('admin');
     const BASE_API=import.meta.env.VITE_API_BASE_URL;
+
+    useEffect(()=>{
+        getRoles();
+    },[])
+
+    const getRoles= async()=>{
+        try {
+            const res= await fetch(`${BASE_API}/administration/getRoles`);
+            const data = await res.json();
+            setRoles(data.ROLES);
+            console.log(data);
+        } catch (error) {
+            alert(error)
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();        
@@ -65,10 +80,10 @@ export default function CreateUser(){
                         <select onChange={(e)=>{ setRole(e.target.value)}}
                                 class="block w-full px-3 py-2.5 bg-white-200 border border-gray-200 rounded-lg text-sm focus:ring-green-500 focus:border-green-500 outline:none"> 
                             {
-                                Object.entries(roles).map(([key,value])=>{
+                                roles.map((item)=>{
                                     return(
                                         <>
-                                            <option value={value}>{key}</option>
+                                            <option value={item}>{item}</option>
                                         </>
                                     )
                                 })

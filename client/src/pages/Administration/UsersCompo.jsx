@@ -5,16 +5,29 @@ export default function UsersCompo(){
 
     const BASE_API=import.meta.env.VITE_API_BASE_URL;
     const accessToken= localStorage.getItem('accessToken')
-    const [roles, setRoles]=useState({admin:'admin', supervisor:'supervisor', scheduler: 'scheduler'})
+    const [roles, setRoles]=useState([]);
     const [users, setUsers]= useState([]);
     const [updatedPass, setUpdatedPass] = useState();
     const [updatedRole, setUpdatedRole] = useState();
     const [loading, setLoading] = useState(false);
 
-    useEffect(()=>{
-        getUsers();
+
+    useEffect(async()=>{
+        await getRoles();
+        await getUsers();
     },[])
 
+    const getRoles= async()=>{
+        try {
+            const res= await fetch(`${BASE_API}/administration/getRoles`);
+            const data = await res.json();
+            setRoles(data.ROLES);
+            console.log(data);
+        } catch (error) {
+            alert(error)
+        }
+    } 
+    
     const getUsers = async()=>{
         const res= await fetch(`${BASE_API}/administration/getUsers`,{
             method:"GET",
@@ -125,8 +138,8 @@ export default function UsersCompo(){
                                 <select value={user.role} onChange={(e) => handleSelect(e.target.value, index)}
                                     className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs outline-none focus:border-green-500"
                                 >
-                                    {Object.entries(roles).map(([key, value]) => (
-                                        <option key={value} value={value}>{key}</option>
+                                    {roles.map((item) => (
+                                        <option key={item} value={item}>{item}</option>
                                     ))}
                                 </select>
                             </div>

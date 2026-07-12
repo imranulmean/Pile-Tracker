@@ -2,19 +2,31 @@ import User from '../models/user.model.js';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+const ROLES=['admin', 'supervisor', 'scheduler']
+
+export const getRoles= async (req, res)=>{
+    res.json({success: true, ROLES})    
+}
 
 export const createUser= async (req, res) => {
     const {username, password, role} = req.body;
     const hashedPass= bcryptjs.hashSync(password, 10);
-    const user = await User.findOne({ username });
-    if(user){
-        return res.json({success: true, message: "User Already Exists"});
+    const isRoleAvailable= ROLES.includes(role.toLowerCase().trim());    
+    try{
+        const user = await User.findOne({ username });
+        if(user){
+            return res.json({success: false, message: "User Already Exists"});
+        }
+        if(!isRoleAvailable){
+            return res.json({success: false, message: "Role Not Defined"});
+        }
+        const userObj= { username, password: hashedPass, role};
+        const newUser = new User(userObj);
+        const userRes= await newUser.save();
+        res.json({success: true, message: "User Created", isRoleAvailable});
+    }catch(err){
+        res.json({ success: false, message: err.message });        
     }
-    const userObj= { username, password: hashedPass, role};
-    const newUser = new User(userObj);
-    const userRes= await newUser.save();
-    res.json({success: true, message: "User Created", userRes});
-
 }
 
 export const loginUser = async (req, res)=>{
@@ -40,6 +52,12 @@ export const loginUser = async (req, res)=>{
 
 export const updateUser = async(req, res)=>{
     const {userId, updatedPass, updatedRole} = req.body;
+    ///////////////////
+    const isRoleAvailable= ROLES.includes(updatedRole.toLowerCase().trim());    
+    if(!isRoleAvailable){
+        return res.json({success: false, message: "Role Not Defined"});
+    }    
+    ///////////////////
     const updatedField={};
     if(updatedRole) updatedField.role=updatedRole
     if(updatedPass) updatedField.password=bcryptjs.hashSync(updatedPass, 10)

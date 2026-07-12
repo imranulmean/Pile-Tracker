@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 import {
   Plus, Search, Download, X, Trash2, Pencil, FolderPlus, AlertTriangle,
   CheckCircle2, HardHat, Building2, MoreHorizontal, Info, Camera, Upload,
   ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer,
   DownloadIcon,
-  UploadIcon
+  UploadIcon,
+  LogOut
 } from "lucide-react";
 import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
@@ -14,8 +15,10 @@ import { ItpReport } from "../components/Pile-Tracker/ItpReport";
 import ImportModal from "../components/Pile-Tracker/ImportModal";
 import ProjectModal from "../components/Pile-Tracker/ProjectModal";
 import RegisterEntryModal from "../components/Pile-Tracker/RegisterEntryModal";
+import { Capacitor } from '@capacitor/core';
 
 import localforage from "localforage";
+import { printItp } from "../utils/printItp";
 
 localforage.config({
     name: "PileTracker",
@@ -277,15 +280,18 @@ export default function PileTracker() {
   const [banner, setBanner] = useState(null);
   const [printData, setPrintData] = useState(null);
   const BASE_API= import.meta.env.VITE_API_BASE_URL
+  const navigate =  useNavigate();
 
   useEffect(() => { 
-    // (async () => {
-
-    // }
-    // )();
     getProjects();
   }, []);
 
+
+  const logout = ()=>{
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('userInfo');
+    navigate('/login');
+  }
 
 const downloadAllInfo = async () => {
   try {
@@ -324,16 +330,43 @@ const downloadAllInfo = async () => {
 
   }
 
-  useEffect(() => {
-    if (!printData) return;
-    const done = () => { 
-      window.removeEventListener("afterprint", done); 
-      setPrintData(null); 
-    };
-    window.addEventListener("afterprint", done);
-    const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
-    return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
-  }, [printData]);
+  // useEffect(() => {
+  //   if (!printData) return;
+  //   console.log("Printing ....")
+  //   const done = () => { 
+  //     window.removeEventListener("afterprint", done); 
+  //     setPrintData(null); 
+  //   };
+  //   window.addEventListener("afterprint", done);
+  //   const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
+  //   return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
+  // }, [printData]);
+
+    useEffect(() => {
+      if (!printData) return;
+
+      const run = async () => {
+
+        if (Capacitor.isNativePlatform()) {
+          // give React 150ms to render the ITP div first
+          await new Promise(r => setTimeout(r, 150));
+          await printItp('itp-print-container');
+          setPrintData(null);
+
+        } else {
+          // web — exactly as before
+          const done = () => {
+            window.removeEventListener("afterprint", done);
+            setPrintData(null);
+          };
+          window.addEventListener("afterprint", done);
+          const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
+          return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
+        }
+      };
+
+      run();
+    }, [printData]);
 
   const openItp = async (list) => {
     console.log(list)
@@ -362,9 +395,7 @@ const downloadAllInfo = async () => {
 
   const persistPiles = useCallback(async (next) => { 
     setPiles(next); 
-    const ok = await setKey(PILES_KEY, next); 
-    if (!ok) 
-    setBanner("Couldn't save to shared storage — changes may not sync to teammates."); 
+    await setKey(PILES_KEY, next); 
   }, []);
 
   const persistProjects = useCallback(async (next) => {
@@ -376,6 +407,22 @@ const downloadAllInfo = async () => {
     setRegister(next); 
     await setKey(REGISTER_KEY, next); 
   }, []);
+
+  const insertToSyncQueue= async(section, payload)=>{
+      const queue = (await getKey(SYNC_QUEUE)) || [];
+      // Remove any previous pending update for the same section
+      const filtered = queue.filter(
+          x => !( x.projectId === payload.projectId && x.pileRef === payload.pileRef && x.section === section)
+      );    
+      filtered.push({
+        projectId: payload.projectId,
+        pileRef: payload.pileRef,
+        section,
+        payload,
+        updatedAt: Date.now()
+      });
+      await setKey(SYNC_QUEUE, filtered);
+  }
 
   const savePile = async (f, photos, section = "all") => {
     const exists = piles.some((x) => x.id === f.id); 
@@ -478,21 +525,13 @@ const downloadAllInfo = async () => {
         payload = rec;
     }    
     console.log(rec)
-    persistPiles(exists ? piles.map((x) => (x.id === id ? rec : x)) : [...piles, rec]); 
+    persistPiles(exists ? piles.map((x) => (x.id === id ? rec : x)) : [...piles, rec]);
+    if(section==='register'){
+      persistRegister(exists ? register.map((x) => (x.id === rec.id ? rec : x)) : [...register, rec]); 
+    }  
+    
     // Save to sync queue
-    const queue = (await getKey(SYNC_QUEUE)) || [];
-    // Remove any previous pending update for the same section
-    const filtered = queue.filter(
-        x => !( x.projectId === payload.projectId && x.pileRef === payload.pileRef && x.section === section)
-    );    
-    filtered.push({
-      projectId: payload.projectId,
-      pileRef: payload.pileRef,
-      section,
-      payload,
-      updatedAt: Date.now()
-    });
-    await setKey(SYNC_QUEUE, filtered);
+    await insertToSyncQueue(section, payload)
     setEditing(null);
   };
 
@@ -556,7 +595,6 @@ const downloadAllInfo = async () => {
   const  saveReg = async(f, isNew) => {     
     const rec = { ...f, id: f.id || uid() };     
     if(isNew){
-      console.log(isNew, f.projectId, f.pileRef)
       const regExists = register.some((x) => x.projectId === f.projectId && x.pileRef === f.pileRef); 
       if(regExists) {
         alert("Register Already Exists");
@@ -564,20 +602,13 @@ const downloadAllInfo = async () => {
       }
     }
     try{
-      const res= await fetch(`${BASE_API}/register/saveReg`,{
-          method:"POST",
-          headers: { 
-              "Content-Type": "application/json"
-            },
-          body: JSON.stringify(rec)
-      })
-      const data= await res.json();
-      if(!data.success){
-          alert(data.message);
-          return;
-      }
-      const exists = register.some((x) => x.id === f.id); 
+      const exists = register.some((x) => x.id === f.id);       
       persistRegister(exists ? register.map((x) => (x.id === rec.id ? rec : x)) : [...register, rec]); 
+      const existPile = piles.some((x) => x.id === f.id); 
+      if (existPile) {
+        persistPiles( piles.map((x) => x.id === rec.id ? { ...x, ...rec } : x ));
+      }            
+      await insertToSyncQueue('register', rec)
       setEditingReg(null);       
     }catch(err){
       alert(err);
@@ -605,20 +636,32 @@ const downloadAllInfo = async () => {
 
   const syncOfflineChanges= async()=>{
     const syncQueue = await getKey(SYNC_QUEUE) || [];
-    console.log(syncQueue.length)
+    console.log(syncQueue);
     if(syncQueue.length<1){
       alert("No Change Pending")
       return;
     }
     try {
       for (const item of syncQueue) {
-        const res= await fetch(`${BASE_API}/pile/savePile`,{
-          method:"POST",
-          headers:{
-            'content-type' : 'application/json'
-          },
-          body:JSON.stringify(item.payload)
-        })
+        if(item.section==='register'){
+            const res= await fetch(`${BASE_API}/register/saveReg`,{
+                method:"POST",
+                headers: { 
+                    "Content-Type": "application/json"
+                  },
+                body: JSON.stringify(item.payload)
+            })          
+        }
+        else{
+          const res= await fetch(`${BASE_API}/pile/savePile`,{
+            method:"POST",
+            headers:{
+              'content-type' : 'application/json'
+            },
+            body:JSON.stringify(item.payload)
+          })
+        }
+
       }
       for (const item of syncQueue) {
         try{
@@ -812,9 +855,9 @@ const downloadAllInfo = async () => {
                 <UploadIcon size={16} /> Sync
               </button>              
 
-              <Link to="/login" className="pt-btn pt-btn-primary">
-                <Plus size={16} /> Login
-              </Link> 
+              <button className="pt-btn pt-btn-primary" onClick={() => logout()}>
+                <LogOut size={16} /> Log Out
+              </button> 
                            
             </>
             )
@@ -976,7 +1019,7 @@ const downloadAllInfo = async () => {
       }
       {
         printData && (          
-          <div className="pt-print">
+          <div className="pt-print" id="itp-print-container">
             {               
               printData.mode === "checklist" ? 
               <ChecklistReport piles={printData.piles} project={printData.project} projects={projects} /> 

@@ -26,10 +26,10 @@ export default function RegisterEntryModal({ entry, projects, defaultProject, on
           <label className="pt-field"><span>Top of steel RL</span><input inputMode="decimal" value={f.topSteelRL} onChange={set("topSteelRL")} placeholder="75.915" /></label>
         </div></div>
         <div className="pt-modal-foot">
-          {
+          {/* {
             !isNew && 
               <button className="pt-btn pt-btn-danger" onClick={() => onDelete(f.id)}><Trash2 size={15} /> Delete</button>
-          }
+          } */}
           <div className="pt-foot-right">
             <button className="pt-btn pt-btn-ghost" onClick={onClose}>Cancel</button>
             <button className="pt-btn pt-btn-primary" onClick={() => onSave(f, isNew)} disabled={!String(f.pileRef).trim() || !f.projectId}>{isNew ? "Add entry" : "Save"}</button>

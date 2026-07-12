@@ -1,8 +1,6 @@
 import express from 'express';
-import { createUser, getUsers, loginUser, updateUser } from '../controllers/administratio.controller.js';
+import { createUser, getRoles, getUsers, loginUser, updateUser } from '../controllers/administratio.controller.js';
 import { verifyToken } from '../middleware/verifyToken.js';
-
-
 
 
 const router = express.Router();
@@ -32,6 +30,7 @@ router.get('/checkToken', verifyToken, async(req, res)=>{
 })
 
 
+router.get('/getRoles', getRoles)
 router.get('/getUsers',verifyToken, getUsers)
 
 

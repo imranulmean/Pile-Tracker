@@ -749,7 +749,10 @@ export default function PileTracker() {
               </button>
               <button className="pt-btn pt-btn-primary" onClick={() => downloadAllInfo()}>
                 <DownloadIcon size={16} /> Download
-              </button>              
+              </button>  
+              <Link to='/administration/createUser' className="pt-btn pt-btn-primary">
+                <DownloadIcon size={16} /> Create User
+              </Link>                            
               <Link to="/login" className="pt-btn pt-btn-primary">
                 <Plus size={16} /> Login
               </Link> 

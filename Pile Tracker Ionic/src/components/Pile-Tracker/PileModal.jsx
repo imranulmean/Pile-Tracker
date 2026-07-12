@@ -235,11 +235,11 @@ export default function PileModal({ pile, projects, defaultProject, onSave, onDe
             </section>
           </div>
             <div className="pt-modal-foot">
-                {!isNew && (
+                {/* {!isNew && (
                     <button type="button" className="pt-btn pt-btn-danger" onClick={() => onDelete(f.id, f.projectId, f.pileRef)}>
                     <Trash2 size={15} /> Delete
                     </button>
-                )}
+                )} */}
             
                 <div className="pt-foot-right">
                     <button type="button" className="pt-btn pt-btn-ghost" onClick={() => onPrint(f, photos)}>

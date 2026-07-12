@@ -5,7 +5,7 @@ import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 
 export default function PrivateRoute() {
 
-    const sessionToken = localStorage.getItem('sessionToken')
-    // return sessionToken ? <Outlet /> : <Navigate to='/login' />;
+    const accessToken = localStorage.getItem('accessToken')
+    return accessToken ? <Outlet /> : <Navigate to='/login' />;
     return <Outlet /> ;
   }
