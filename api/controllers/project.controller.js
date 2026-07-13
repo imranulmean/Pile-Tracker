@@ -8,8 +8,6 @@ export const saveProject = async(req, res)=>{
                         { new: true, upsert: true }
                     );
 
-    // const newProject = new Project(req.body);
-    // const projectRes= await newProject.save();
     res.json({success: true, message: "Project Saved", project});    
 }
 

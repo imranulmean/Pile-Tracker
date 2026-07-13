@@ -6,7 +6,8 @@ import {
   ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer,
   DownloadIcon,
   UploadIcon,
-  LogOut
+  LogOut,
+  Delete
 } from "lucide-react";
 import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
@@ -54,9 +55,6 @@ export const delKey = async (key) => {
     await localforage.removeItem(key);
 };
 
-export const clearStorage = async () => {
-    await localforage.clear();
-};
 /* ───────────────────────── domain ───────────────────────── */
 const STAGES = [
   { key: "not_started", label: "Not started", short: "Pending", color: "#94A0AE" },
@@ -294,6 +292,12 @@ export default function PileTracker() {
     navigate('/login');
   }
 
+  const clearStorage = async () => {
+    await localforage.clear();
+    await persistProjects([]);
+    await persistRegister([]);
+    await persistPiles([]);
+  };
 const downloadAllInfo = async () => {
   try {
 
@@ -421,14 +425,20 @@ const downloadAllInfo = async () => {
   }, []);
 
   const insertToSyncQueue= async(section, payload)=>{
+
       const queue = (await getKey(SYNC_QUEUE)) || [];
-      // Remove any previous pending update for the same section
-      const filtered = queue.filter(
-          x => !( x.projectId === payload.projectId && x.pileRef === payload.pileRef && x.section === section)
-      );    
+      let filtered=[];
+      if(section == 'saveProject'){
+        filtered = queue.filter( x => !( x.id === payload.id  && x.section === section));         
+      }
+      else{
+        filtered = queue.filter(
+            x => !( x.projectId === payload.projectId && x.pileRef === payload.pileRef && x.section === section)
+        ); 
+      }   
       filtered.push({
-        projectId: payload.projectId,
-        pileRef: payload.pileRef,
+        projectId: payload.projectId || "",
+        pileRef: payload.pileRef || "",
         section,
         payload,
         updatedAt: Date.now()
@@ -569,8 +579,7 @@ const downloadAllInfo = async () => {
 
   const saveProject = async(f) => { 
     let proj;
-    if (f.id) { 
-      // persistProjects(projects.map((p) => (p.id === f.id ? { ...p, ...f } : p))); 
+    if (f.id) {
       proj=f;
     } 
     else { 
@@ -579,19 +588,9 @@ const downloadAllInfo = async () => {
       ///////////////////////////
       setLoading(true);
       try {
-        const res= await fetch(`${BASE_API}/project/saveProject`,{
-            method:"POST",
-            headers: { 
-                "Content-Type": "application/json"
-              },
-            body: JSON.stringify(proj)
-        })
-        const data= await res.json();
-        if(!data.success){
-            alert(data.message);
-            return;
-        }
-        persistProjects([...projects, proj]); 
+        await insertToSyncQueue ('saveProject', proj)
+        const exists = projects.some((x) => x.id === f.id); 
+        persistProjects(exists ? projects.map((x) => (x.id === proj.id ? proj : x)) : [...projects, proj]);
         setActive(proj.id);
       } catch (error) {
           alert(error)
@@ -649,6 +648,7 @@ const downloadAllInfo = async () => {
   const syncOfflineChanges= async()=>{
     const syncQueue = await getKey(SYNC_QUEUE) || [];
     console.log(syncQueue);
+    // return
     if(syncQueue.length<1){
       alert("No Change Pending")
       return;
@@ -670,7 +670,22 @@ const downloadAllInfo = async () => {
               return;
             }
         }
-        else{
+        else if(item.section==='saveProject'){
+          const res= await fetch(`${BASE_API}/project/saveProject`,{
+              method:"POST",
+              headers: { 
+                  "Content-Type": "application/json",
+                  'authorization': accessToken
+                },
+              body: JSON.stringify(item.payload)
+          })
+          const data= await res.json();
+          if(!data.success){
+            alert(data.message)
+            return;
+          }
+        }        
+        else {
           const res= await fetch(`${BASE_API}/pile/savePile`,{
             method:"POST",
             headers:{
@@ -850,6 +865,22 @@ const downloadAllInfo = async () => {
     <div className="pt-app">
       <div className="pt-brandbar">
         <img src={LOGO_URI} alt="NCF — Build with Confidence" />
+          <div className="w-full flex flex-wrap justify-end items-center gap-2">
+            <button className="pt-btn pt-btn-ghost" onClick={() => downloadAllInfo()}>
+              <DownloadIcon size={16} /> Download
+            </button> 
+            <button className="pt-btn pt-btn-ghost" onClick={() => clearStorage()}>
+              <Delete size={16} /> Clear
+            </button>
+            <button className="pt-btn pt-btn-ghost" onClick={() => syncOfflineChanges()}>
+              <UploadIcon size={16} /> Sync
+            </button>              
+
+            <button className="pt-btn pt-btn-primary" onClick={() => logout()}>
+              <LogOut size={16} /> Log Out
+            </button> 
+          </div>
+        
       </div>
       <header className="pt-header">
         <div className="pt-brand"><span className="pt-brand-mark"><HardHat size={18} /></span><div><div className="pt-brand-name">Pile Tracker</div><div className="pt-brand-sub">Drill · cage · pour · QA</div></div></div>
@@ -868,21 +899,7 @@ const downloadAllInfo = async () => {
               </button>
               <button className="pt-btn pt-btn-primary" onClick={() => setEditing({})} disabled={!projects.length}>
                 <Plus size={16} /> Add pile
-              </button>
-              <button className="pt-btn pt-btn-primary" onClick={() => downloadAllInfo()}>
-                <DownloadIcon size={16} /> Download
-              </button> 
-              <button className="pt-btn pt-btn-primary" onClick={() => clearStorage()}>
-                <DownloadIcon size={16} /> Clear
-              </button>
-              <button className="pt-btn pt-btn-ghost" onClick={() => syncOfflineChanges()}>
-                <UploadIcon size={16} /> Sync
-              </button>              
-
-              <button className="pt-btn pt-btn-primary" onClick={() => logout()}>
-                <LogOut size={16} /> Log Out
-              </button> 
-                           
+              </button>                           
             </>
             )
               : 
@@ -910,12 +927,12 @@ const downloadAllInfo = async () => {
             <h2>Start tracking your piles</h2>
             <p>Load your Rev 26 schedule to populate the register with all 1,300 piles, then log each one as it's drilled, caged, poured and signed off — with hold-point photos.</p>
             <div className="pt-empty-actions">
-              <button className="pt-btn pt-btn-primary" onClick={loadSchedule}><
+              {/* <button className="pt-btn pt-btn-primary" onClick={loadSchedule}><
                 Upload size={16} /> Load Rev 26 (1300)
-              </button>
-              <button className="pt-btn pt-btn-primary" onClick={loadCPB}>
+              </button> */}
+              {/* <button className="pt-btn pt-btn-primary" onClick={loadCPB}>
                 <Upload size={16} /> Load CPB job (123)
-              </button>
+              </button> */}
               <button className="pt-btn pt-btn-ghost" onClick={() => setShowProject(true)}>
                 <FolderPlus size={16} /> Add a blank job
               </button>

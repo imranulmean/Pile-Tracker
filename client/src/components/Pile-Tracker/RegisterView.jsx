@@ -67,7 +67,6 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
       return rows.filter((r) => filter === "all" || r.status === filter).filter((r) => { if (!s) return true; const src = r.reg || r.trk; return String(src.pileRef).toLowerCase().includes(s) || norm(src.verticalReo).includes(s); });
     }, [rows, filter, q]);    
     const shown = filtered.slice(0, RENDER_CAP);
-    console.log(shown)
     const issues = (counts.mismatch || 0) + (counts.missing || 0) + (counts.unregistered || 0);
   
     if (register.filter((r) => active === "all" || r.projectId === active).length === 0 && rows.length === 0) {
@@ -77,8 +76,8 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
           <h2>Build your pile register</h2>
           <p>Your source of truth from the schedule. Load it once, then the board flags any pile the site team logs that doesn't match — or hasn't been logged at all.</p>
           <div className="pt-empty-actions">
-            <button className="pt-btn pt-btn-primary" onClick={onLoadSchedule}><Upload size={16} /> Load Rev 26 (1300)</button>
-            <button className="pt-btn pt-btn-primary" onClick={onLoadCPB}><Upload size={16} /> Load CPB job (123)</button>
+            {/* <button className="pt-btn pt-btn-primary" onClick={onLoadSchedule}><Upload size={16} /> Load Rev 26 (1300)</button>
+            <button className="pt-btn pt-btn-primary" onClick={onLoadCPB}><Upload size={16} /> Load CPB job (123)</button> */}
             <button className="pt-btn pt-btn-ghost" onClick={onImport} disabled={active === "all"}>Paste a register</button>
             <button className="pt-btn pt-btn-ghost" onClick={onAdd} disabled={active === "all"}><Plus size={15} /> Add entry</button>
           </div>
@@ -89,7 +88,7 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
     return (
       <>
         <div className="pt-recon-summary">
-          {(() => {
+          {/* {(() => {
             const hasRev = projects.some((p) => p.code === "REV26");
             const hasCPB = projects.some((p) => p.code === "CPB");
             if (hasRev && hasCPB) return null;
@@ -100,7 +99,7 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
                 {!hasCPB && <button className="pt-btn pt-btn-ghost pt-btn-sm" onClick={onLoadCPB}><Upload size={14} /> CPB job (123)</button>}
               </div>
             );
-          })()}
+          })()} */}
           <div className="pt-recon-headline"><ClipboardCheck size={18} color={issues ? "#C5432B" : "#2E9E5B"} /><span>{issues === 0 ? "Site log matches the register" : `${issues} item${issues === 1 ? "" : "s"} to reconcile`}</span></div>
             <div className="pt-recon-stats">
               <button

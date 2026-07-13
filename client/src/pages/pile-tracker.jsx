@@ -15,6 +15,7 @@ import { ItpReport } from "../components/Pile-Tracker/ItpReport";
 import ImportModal from "../components/Pile-Tracker/ImportModal";
 import ProjectModal from "../components/Pile-Tracker/ProjectModal";
 import RegisterEntryModal from "../components/Pile-Tracker/RegisterEntryModal";
+import Header from "../components/Pile-Tracker/Header";
 
 /* schedule seeded from "Pile Schedule Rev 26 — 19 May 26" (1300 piles)
    columns: [no, dia, grade, verticalReo, ligs, socket, cutoffRL, topSteelRL, cancelled?] */
@@ -750,17 +751,9 @@ export default function PileTracker() {
     }
   }
 
-  const logout = ()=>{
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('userInfo');
-    navigate('/login');
-  }  
-
   return (
     <div className="pt-app">
-      <div className="pt-brandbar">
-        <img src={LOGO_URI} alt="NCF — Build with Confidence" />
-      </div>
+      <Header/>
       <header className="pt-header">
         <div className="pt-brand"><span className="pt-brand-mark"><HardHat size={18} /></span><div><div className="pt-brand-name">Pile Tracker</div><div className="pt-brand-sub">Drill · cage · pour · QA</div></div></div>
         <div className="pt-header-actions">
@@ -779,13 +772,6 @@ export default function PileTracker() {
               <button className="pt-btn pt-btn-primary" onClick={() => setEditing({})} disabled={!projects.length}>
                 <Plus size={16} /> Add pile
               </button>                           
-              <button className="pt-btn pt-btn-primary" onClick={() => logout()}>
-                <LogOut size={16} /> Log Out
-              </button> 
-              <Link to='/administration/dashboard' className="pt-btn pt-btn-primary">
-                <LayoutDashboardIcon size={16} /> Dashboard
-              </Link>               
-                           
             </>
             )
               : 
@@ -816,12 +802,12 @@ export default function PileTracker() {
             <h2>Start tracking your piles</h2>
             <p>Load your Rev 26 schedule to populate the register with all 1,300 piles, then log each one as it's drilled, caged, poured and signed off — with hold-point photos.</p>
             <div className="pt-empty-actions">
-              <button className="pt-btn pt-btn-primary" onClick={loadSchedule}><
+              {/* <button className="pt-btn pt-btn-primary" onClick={loadSchedule}><
                 Upload size={16} /> Load Rev 26 (1300)
-              </button>
-              <button className="pt-btn pt-btn-primary" onClick={loadCPB}>
+              </button> */}
+              {/* <button className="pt-btn pt-btn-primary" onClick={loadCPB}>
                 <Upload size={16} /> Load CPB job (123)
-              </button>
+              </button> */}
               <button className="pt-btn pt-btn-ghost" onClick={() => setShowProject(true)}>
                 <FolderPlus size={16} /> Add a blank job
               </button>
@@ -949,16 +935,16 @@ export default function PileTracker() {
           <div className="pt-print">
             {               
               printData.mode === "checklist" ? 
-              <ChecklistReport piles={printData.piles} project={printData.project} projects={projects} /> 
+                <ChecklistReport piles={printData.piles} project={printData.project} projects={projects} /> 
               : 
-              printData.piles.map((p) => 
-                <ItpReport 
-                  key={p.id || "tmp"} 
-                  pile={p} 
-                  project={projects.find((x) => x.id === p.projectId)} 
-                  photos={printData.photos[p.id || "tmp"]}
-                  printData = {printData} 
-                />)
+                printData.piles.map((p) => 
+                  <ItpReport 
+                    key={p.id || "tmp"} 
+                    pile={p} 
+                    project={projects.find((x) => x.id === p.projectId)} 
+                    photos={printData.photos[p.id || "tmp"]}
+                    printData = {printData} 
+                  />)
             }
           </div>
         )

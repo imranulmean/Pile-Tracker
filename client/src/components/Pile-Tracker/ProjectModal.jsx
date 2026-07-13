@@ -40,13 +40,13 @@ export default function ProjectModal({ project, onSave, onLoadSchedule, onLoadCP
                         {
                             !isEdit && (onLoadSchedule || onLoadCPB) && (
                                 <>
-                                    <div className="pt-fset-label" style={{ marginTop: 16, marginBottom: 8 }}>
+                                    {/* <div className="pt-fset-label" style={{ marginTop: 16, marginBottom: 8 }}>
                                         Or load a ready register
                                     </div>
                                     <div className="pt-empty-actions" style={{ justifyContent: "flex-start", marginTop: 0 }}>
                                         <button className="pt-btn pt-btn-ghost" onClick={onLoadSchedule}>Rev 26 (1300)</button>
                                         <button className="pt-btn pt-btn-ghost" onClick={onLoadCPB}>CPB job (123)</button>
-                                    </div>
+                                    </div> */}
                                 </>
                             )
                         }

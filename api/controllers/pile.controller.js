@@ -41,7 +41,6 @@ export const savePile = async (req, res) => {
 
     let setData = { ...rest };
 
-    console.log(setData)
     // return
     if (rest.hp) {
         for (const key of Object.keys(rest.hp)) {

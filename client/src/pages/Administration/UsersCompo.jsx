@@ -12,11 +12,13 @@ export default function UsersCompo(){
     const [loading, setLoading] = useState(false);
 
 
-    useEffect(async()=>{
-        await getRoles();
-        await getUsers();
-    },[])
-
+    useEffect(() => {
+        async function loadData() {
+            await getRoles();
+            await getUsers();
+        }
+        loadData();
+    }, [])
     const getRoles= async()=>{
         try {
             const res= await fetch(`${BASE_API}/administration/getRoles`,{
@@ -122,7 +124,7 @@ export default function UsersCompo(){
                 </div>
                 <div className="flex flex-col">
                     <span className="text-xs text-gray-400">{users.length} users</span>
-                    <Link to='/administration/createUser' target="_blank" className="text-xs text-blue-500">Create User</Link>
+                    <Link to='/administration/createUser' className="text-xs text-blue-500">Create User</Link>
                 </div>
 
             </div>
