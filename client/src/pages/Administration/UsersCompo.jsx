@@ -19,6 +19,7 @@ export default function UsersCompo(){
         }
         loadData();
     }, [])
+    
     const getRoles= async()=>{
         try {
             const res= await fetch(`${BASE_API}/administration/getRoles`,{

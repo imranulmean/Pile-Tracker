@@ -37,3 +37,5 @@ capacitor.config.json --------------
 
 in AndroidMenifest.xml add 
 android:usesCleartextTraffic="true"
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

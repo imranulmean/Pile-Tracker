@@ -9,7 +9,7 @@ import {
   LogOut,
   Delete
 } from "lucide-react";
-import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
+import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS, styles } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
 import PileModal from "../components/Pile-Tracker/PileModal";
 import { ItpReport } from "../components/Pile-Tracker/ItpReport";
@@ -17,9 +17,9 @@ import ImportModal from "../components/Pile-Tracker/ImportModal";
 import ProjectModal from "../components/Pile-Tracker/ProjectModal";
 import RegisterEntryModal from "../components/Pile-Tracker/RegisterEntryModal";
 import { Capacitor } from '@capacitor/core';
+import { Printer as NativePrinter } from "@capgo/capacitor-printer";
 
 import localforage from "localforage";
-import { printItp } from "../utils/printItp";
 
 localforage.config({
     name: "PileTracker",
@@ -345,44 +345,60 @@ const downloadAllInfo = async () => {
     }
 
   }
+  useEffect(() => {
+    if (!printData) return;
 
-  // useEffect(() => {
-  //   if (!printData) return;
-  //   console.log("Printing ....")
-  //   const done = () => { 
-  //     window.removeEventListener("afterprint", done); 
-  //     setPrintData(null); 
-  //   };
-  //   window.addEventListener("afterprint", done);
-  //   const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
-  //   return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
-  // }, [printData]);
+    const handleNativePrint = async () => {
+      // Give React a fraction of time to render the DOM elements inside the container
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const printElement = document.getElementById("itp-print-container");
+      if (printElement) {
+        try {
+          // Construct a clean, isolated full HTML structure for the native view to render
+          const reportHtml = `
+            <html>
+              <head>
+                <title>Bored Pile Record</title>
+                <style> ${styles}</style>
+              </head>
+              <body>
+                ${printElement.innerHTML}
+              </body>
+            </html>
+          `;
 
-    useEffect(() => {
-      if (!printData) return;
+          // Native system print layout call
+          await NativePrinter.printHtml({
+            name: `Pile_Report_${printData.piles?.[0]?.pileRef || 'Document'}`,
+            html: reportHtml
+          });
 
-      const run = async () => {
-
-        if (Capacitor.isNativePlatform()) {
-          // give React 150ms to render the ITP div first
-          await new Promise(r => setTimeout(r, 150));
-          await printItp('itp-print-container');
-          setPrintData(null);
-
-        } else {
-          // web — exactly as before
-          const done = () => {
-            window.removeEventListener("afterprint", done);
-            setPrintData(null);
-          };
-          window.addEventListener("afterprint", done);
-          const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
-          return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
+        } catch (error) {
+          console.error("Native printing failed:", error);
+        } finally {
+          setPrintData(null); // Clear state out to shut down loop
         }
-      };
+      }
+    };
 
-      run();
-    }, [printData]);
+    const handleWebPrint = () => {
+      const done = () => { 
+        window.removeEventListener("afterprint", done); 
+        setPrintData(null); 
+      };
+      window.addEventListener("afterprint", done);
+      const t = setTimeout(() => { try { window.print(); } catch (e) {} }, 150);
+      return () => { clearTimeout(t); window.removeEventListener("afterprint", done); };
+    };
+
+    // Environment execution splitter
+    if (Capacitor.isNativePlatform()) {
+      handleNativePrint();
+    } else {
+      return handleWebPrint();
+    }
+  }, [printData]);
 
   const openItp = async (list) => {
     console.log(list)
@@ -1060,16 +1076,16 @@ const downloadAllInfo = async () => {
           <div className="pt-print" id="itp-print-container">
             {               
               printData.mode === "checklist" ? 
-              <ChecklistReport piles={printData.piles} project={printData.project} projects={projects} /> 
+                <ChecklistReport piles={printData.piles} project={printData.project} projects={projects} /> 
               : 
-              printData.piles.map((p) => 
-                <ItpReport 
-                  key={p.id || "tmp"} 
-                  pile={p} 
-                  project={projects.find((x) => x.id === p.projectId)} 
-                  photos={printData.photos[p.id || "tmp"]}
-                  printData = {printData} 
-                />)
+                printData.piles.map((p) => 
+                  <ItpReport 
+                    key={p.id || "tmp"} 
+                    pile={p} 
+                    project={projects.find((x) => x.id === p.projectId)} 
+                    photos={printData.photos[p.id || "tmp"]}
+                    printData = {printData} 
+                  />)
             }
           </div>
         )

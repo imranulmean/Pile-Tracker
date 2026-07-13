@@ -1,5 +1,6 @@
 import { Button, Checkbox, Label, TextInput } from "flowbite-react";
 import { useEffect, useState } from "react";
+import Header from "../../components/Pile-Tracker/Header";
 
 export default function CreateUser(){
 
@@ -67,6 +68,7 @@ export default function CreateUser(){
 
     return(
         <>
+            <Header/>
             <div className="flex flex-col w-full h-[100vh]" 
                 style={{'justify-content': 'center', 'align-items': 'center', 'background':'url(/login-bg-new.jpg)', 'background-repeat': 'no-repeat', 'background-position': 'center', 'background-size': 'cover' }}>
                 <div className="w-full max-w-md bg-white p-10 rounded-lg ">
