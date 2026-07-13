@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { ROLES } from '../controllers/administratio.controller.js';
 import User from '../models/user.model.js';
 
 export const verifyToken = async(req, res, next) => {
@@ -12,7 +13,27 @@ export const verifyToken = async(req, res, next) => {
         if(!validUser){
             return res.status(401).json({ success:false, message: "Unauthorized" });  
         }
-        req.user = user;
+        req.user = validUser;
         next();
     });
   };
+
+  export const verifyRole = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: "Not Preveiliged"
+            });
+        }
+
+        next();
+    };
+};

@@ -9,12 +9,12 @@ export default function App(){
   return(
     <BrowserRouter>
       <Routes>
-        <Route path='/login' element={<Login/>} />
-        <Route path='/administration/createUser' element={<CreateUser/>} />
-        <Route element={<PrivateRoute/>}>
+        <Route path='/login' element={<Login/>} />        
+        <Route element={<PrivateRoute/>}>          
           <Route path='/' element={<PileTracker />} />
           <Route path='/pile-tracker' element={<PileTracker />} />
-          <Route path='/administration/dashboard' element={<AdminDashboard />} />
+          <Route path='/administration/createUser' element={<CreateUser/>} />
+          <Route path='/administration/dashboard' element={<AdminDashboard />} />          
         </Route>
       </Routes>        
     </BrowserRouter>    

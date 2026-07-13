@@ -279,7 +279,8 @@ export default function PileTracker() {
   const [showImport, setShowImport] = useState(false);
   const [banner, setBanner] = useState(null);
   const [printData, setPrintData] = useState(null);
-  const BASE_API= import.meta.env.VITE_API_BASE_URL
+  const BASE_API= import.meta.env.VITE_API_BASE_URL;
+  const accessToken = localStorage.getItem('accessToken');
   const navigate =  useNavigate();
 
   useEffect(() => { 
@@ -296,12 +297,23 @@ export default function PileTracker() {
 const downloadAllInfo = async () => {
   try {
 
-      const projectRes = await fetch(`${BASE_API}/project/getProjects`);
+      const projectRes = await fetch(`${BASE_API}/project/getProjects`,{
+        method:"GET",
+        headers:{
+          'content-type' : 'application/json',
+          'authorization': accessToken
+        }
+      });
       const projectData = await projectRes.json();
 
-      const registerRes = await fetch(`${BASE_API}/register/loadRegister/all`);
-      const registerData = await registerRes.json();
-
+      const registerRes = await fetch(`${BASE_API}/register/loadRegister/all`,{
+        method:"GET",
+        headers:{
+          'content-type' : 'application/json',
+          'authorization': accessToken
+        }
+      });    
+      const registerData = await registerRes.json();  
       if (!projectData.success || !registerData.success) {
           alert("Download failed");
           return;
@@ -647,19 +659,31 @@ const downloadAllInfo = async () => {
             const res= await fetch(`${BASE_API}/register/saveReg`,{
                 method:"POST",
                 headers: { 
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    'authorization': accessToken
                   },
                 body: JSON.stringify(item.payload)
-            })          
+            })
+            const data= await res.json();
+            if(!data.success){
+              alert(data.message)
+              return;
+            }
         }
         else{
           const res= await fetch(`${BASE_API}/pile/savePile`,{
             method:"POST",
             headers:{
-              'content-type' : 'application/json'
+              'content-type' : 'application/json',
+              'authorization': accessToken
             },
             body:JSON.stringify(item.payload)
           })
+          const data= await res.json();
+          if(!data.success){
+            alert(data.message)
+            return;
+          }          
         }
 
       }
@@ -864,9 +888,6 @@ const downloadAllInfo = async () => {
               : 
             (
               <>
-                <button className="pt-btn pt-btn-ghost" onClick={() => setShowImport(true)} disabled={!projects.length}>
-                  <Upload size={15} /> Import
-                </button>
                 <button className="pt-btn pt-btn-primary" onClick={() => setEditingReg({})} disabled={!projects.length}>
                   <Plus size={16} /> Add entry
                 </button>

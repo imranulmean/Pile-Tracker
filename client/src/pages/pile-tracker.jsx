@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 import {
   Plus, Search, Download, X, Trash2, Pencil, FolderPlus, AlertTriangle,
   CheckCircle2, HardHat, Building2, MoreHorizontal, Info, Camera, Upload,
   ClipboardCheck, ListChecks, ShieldCheck, ClipboardList, Printer,
-  DownloadIcon
+  DownloadIcon,
+  LogOut,
+  LayoutDashboardIcon
 } from "lucide-react";
 import { SCHEDULE_SEED_JS, CPB_SEED_JS, LOGO_URI_JS } from "../seed";
 import RegisterView from "../components/Pile-Tracker/RegisterView";
@@ -277,7 +279,10 @@ export default function PileTracker() {
   const [showImport, setShowImport] = useState(false);
   const [banner, setBanner] = useState(null);
   const [printData, setPrintData] = useState(null);
-  const BASE_API= import.meta.env.VITE_API_BASE_URL
+  const BASE_API= import.meta.env.VITE_API_BASE_URL;
+  const navigate= useNavigate();
+
+  const accessToken= localStorage.getItem('accessToken');
 
   useEffect(() => { 
     // (async () => {
@@ -288,20 +293,21 @@ export default function PileTracker() {
   }, []);
 
 
-  const downloadAllInfo= async()=>{
-    try{
-      await fetch(`${BASE_API}/project/getProjects`);
-      await fetch(`${BASE_API}/register/loadRegister/all`);
-    }catch(err){
-      alert(err);
-    }
-  }
-
   const getProjects= async()=>{
     try{
-      const res= await fetch(`${BASE_API}/project/getProjects`);
+      const res= await fetch(`${BASE_API}/project/getProjects`,{
+        method:"GET",
+        headers:{
+          'content-type':"application/json",
+          'authorization': accessToken
+        }
+      });
       const data= await res.json();
       // setProjects((await getKey(PROJECTS_KEY)) || []);
+      if(!data.success){
+        alert(data.message)
+        return
+      }      
       setProjects(data.message); 
       // setPiles((await getKey(PILES_KEY)) || []); 
       // setRegister((await getKey(REGISTER_KEY)) || []); 
@@ -469,12 +475,16 @@ export default function PileTracker() {
       const res= await fetch(`${BASE_API}/pile/savePile`,{
         method:"POST",
         headers:{
+          'authorization': accessToken,
           'content-type' : 'application/json'
         },
         body:JSON.stringify(payload)
       })
       const data= await res.json();
-      console.log(data);
+      if(!data.success){
+        alert(data.message)
+        return
+      }  
     }catch(err){
       alert(err);
     }
@@ -517,6 +527,7 @@ export default function PileTracker() {
         const res= await fetch(`${BASE_API}/project/saveProject`,{
             method:"POST",
             headers: { 
+                'authorization': accessToken,
                 "Content-Type": "application/json"
               },
             body: JSON.stringify(proj)
@@ -553,6 +564,7 @@ export default function PileTracker() {
       const res= await fetch(`${BASE_API}/register/saveReg`,{
           method:"POST",
           headers: { 
+              'authorization': accessToken,
               "Content-Type": "application/json"
             },
           body: JSON.stringify(rec)
@@ -574,7 +586,10 @@ export default function PileTracker() {
 
     try {
       const res= await fetch(`${BASE_API}/register/deleteReg/${id}`,{
-          method:"DELETE"
+          method:"DELETE",
+          headers:{
+            'authorization': accessToken
+          }
       });
       const data= await res.json();
       if(!data.success){
@@ -596,6 +611,7 @@ export default function PileTracker() {
       const res= await fetch(`${BASE_API}/register/bulkImport`,{
         method:"POST",
         headers:{
+          'authorization': accessToken,
           'content-type' : 'application/json'
         },
         body:JSON.stringify(bulkImport)
@@ -714,8 +730,18 @@ export default function PileTracker() {
   const loadRegister= async(projectId)=>{
     // return;
     try{
-      const res= await fetch(`${BASE_API}/register/loadRegister/${projectId}`);
+      const res= await fetch(`${BASE_API}/register/loadRegister/${projectId}`,{
+        method:"GET",
+        headers:{
+          'authorization': accessToken,
+          'content-type': 'application/json',
+        }
+      });
       const data = await res.json();
+      if(!data.success){
+        alert(data.message);
+        return;
+      }      
       setRegister(data.register);
       setPiles(data.piles)
       setActive(projectId)
@@ -723,6 +749,12 @@ export default function PileTracker() {
       alert(err);
     }
   }
+
+  const logout = ()=>{
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('userInfo');
+    navigate('/login');
+  }  
 
   return (
     <div className="pt-app">
@@ -746,16 +778,13 @@ export default function PileTracker() {
               </button>
               <button className="pt-btn pt-btn-primary" onClick={() => setEditing({})} disabled={!projects.length}>
                 <Plus size={16} /> Add pile
-              </button>
-              <button className="pt-btn pt-btn-primary" onClick={() => downloadAllInfo()}>
-                <DownloadIcon size={16} /> Download
-              </button>  
-              <Link to='/administration/createUser' className="pt-btn pt-btn-primary">
-                <DownloadIcon size={16} /> Create User
-              </Link>                            
-              <Link to="/login" className="pt-btn pt-btn-primary">
-                <Plus size={16} /> Login
-              </Link> 
+              </button>                           
+              <button className="pt-btn pt-btn-primary" onClick={() => logout()}>
+                <LogOut size={16} /> Log Out
+              </button> 
+              <Link to='/administration/dashboard' className="pt-btn pt-btn-primary">
+                <LayoutDashboardIcon size={16} /> Dashboard
+              </Link>               
                            
             </>
             )

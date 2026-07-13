@@ -79,7 +79,6 @@ export default function RegisterView({ register, piles, projects, active, onAdd,
           <div className="pt-empty-actions">
             <button className="pt-btn pt-btn-primary" onClick={onLoadSchedule}><Upload size={16} /> Load Rev 26 (1300)</button>
             <button className="pt-btn pt-btn-primary" onClick={onLoadCPB}><Upload size={16} /> Load CPB job (123)</button>
-            <button className="pt-btn pt-btn-ghost" onClick={onImport} disabled={active === "all"}>Paste a register</button>
             <button className="pt-btn pt-btn-ghost" onClick={onAdd} disabled={active === "all"}><Plus size={15} /> Add entry</button>
           </div>
           {active === "all" && <div className="pt-hint" style={{ marginTop: 14 }}>Pick a specific job above to add register entries manually.</div>}

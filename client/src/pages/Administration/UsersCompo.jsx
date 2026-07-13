@@ -19,10 +19,19 @@ export default function UsersCompo(){
 
     const getRoles= async()=>{
         try {
-            const res= await fetch(`${BASE_API}/administration/getRoles`);
+            const res= await fetch(`${BASE_API}/administration/getRoles`,{
+                method:"GET",
+                headers:{
+                    'content-type':"application/json",
+                    'authorization' : accessToken
+                } 
+            });
             const data = await res.json();
+            if(!data.success){
+                alert(data.message)
+                return;
+            }
             setRoles(data.ROLES);
-            console.log(data);
         } catch (error) {
             alert(error)
         }
@@ -37,6 +46,10 @@ export default function UsersCompo(){
             }            
         })
         const data = await res.json();
+        if(!data.success){
+            alert(data.message)
+            return;
+        }        
         setUsers(data.message)
     }
 
@@ -63,7 +76,10 @@ export default function UsersCompo(){
                 body: JSON.stringify(obj)
             })
             const data= await res.json();
-            alert(data.message);
+            if(!data.success){
+                alert(data.message)
+                return
+            }
         } catch (error) {
             alert(error)
         }
@@ -106,7 +122,7 @@ export default function UsersCompo(){
                 </div>
                 <div className="flex flex-col">
                     <span className="text-xs text-gray-400">{users.length} users</span>
-                    <Link to='/administration/createUser' className="text-xs text-blue-500">Create User</Link>
+                    <Link to='/administration/createUser' target="_blank" className="text-xs text-blue-500">Create User</Link>
                 </div>
 
             </div>

@@ -1,6 +1,6 @@
 import express from 'express';
 import { createUser, getRoles, getUsers, loginUser, updateUser } from '../controllers/administratio.controller.js';
-import { verifyToken } from '../middleware/verifyToken.js';
+import { verifyRole, verifyToken } from '../middleware/verifyToken.js';
 
 
 const router = express.Router();
@@ -9,30 +9,10 @@ router.get('/test',(req, res)=>{
     res.json({message:"hello"});
 })
 
-router.post('/createUser', createUser)
-
+router.post('/createUser',verifyToken, verifyRole('admin'), createUser)
 router.post('/login', loginUser)
-
-router.post('/updateUser', verifyToken, updateUser)
-
-router.post('/deleteMail',verifyToken, async(req, res)=>{
-    try {
-        const { mailId } = req.body;
-        const validMail = await MailLog.findByIdAndDelete({_id:mailId});
-        res.json({success: true, message: "Mail delete Success"});
-    } catch (error) {
-        res.json({success:false, message: error.message});
-    }
-})
-
-router.get('/checkToken', verifyToken, async(req, res)=>{
-    res.json({success:true, message:"Authenticated"})
-})
-
-
-router.get('/getRoles', getRoles)
-router.get('/getUsers',verifyToken, getUsers)
-
-
+router.post('/updateUser',verifyToken, verifyRole('admin'), updateUser)
+router.get('/getRoles',verifyToken, verifyRole('admin'), getRoles)
+router.get('/getUsers',verifyToken, verifyRole('admin'), getUsers)
 
 export default router;

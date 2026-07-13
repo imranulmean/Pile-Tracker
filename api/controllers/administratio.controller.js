@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const ROLES=['admin', 'supervisor', 'scheduler']
+export const ROLES=['admin', 'supervisor', 'scheduler', 'viewer']
 
 export const getRoles= async (req, res)=>{
     res.json({success: true, ROLES})    
